@@ -1,38 +1,57 @@
 #include"XenoJetBench.h"
 
-#define HIGHEST 53 /* highest priority */
-#define HIGH 52 /* high priority */
-#define MID 51 /* medium priority */
-#define LOW 50  /* low priority */
+#define HIGHEST RT_THREAD_PRIORITY_MAX - 10 /* highest priority */
+#define HIGH RT_THREAD_PRIORITY_MAX - 9 /* high priority */
+#define MID RT_THREAD_PRIORITY_MAX - 8 /* medium priority */
+#define LOW RT_THREAD_PRIORITY_MAX - 7  /* low priority */
 
-static RT_TASK  deduceinputs, getthermo, getgeo, calcperf;
+static struct rt_thread  thd_deduceinputs, thd_getthermo, thd_getgeo, thd_calcperf;
+static rt_uint8_t rt_thd_stack[4][2048];
 
-void init_xenomai() {
- 	/* Avoids memory swapping for this program */
-	mlockall(MCL_CURRENT|MCL_FUTURE);
-
-	/* Perform auto-init of rt_print buffers if the task doesn't do so */
-        rt_print_auto_init(1);
+void create_tasks()
+{ 
+    rt_thread_init(&thd_deduceinputs,
+                    "DeduceInputs",
+                    deduceinputs,
+                    RT_NULL,
+                    rt_thd_stack[0],
+                    sizeof(rt_thd_stack[0]),
+                    99,
+                    period);
+    rt_thread_init(&thd_getthermo,
+                    "GetThermo",
+                    getthermo,
+                    RT_NULL,
+                    rt_thd_stack[1],
+                    sizeof(rt_thd_stack[1]),
+                    99,
+                    period);
+    rt_thread_init(&thd_getgeo,
+                    "GetGeo",
+                    getgeo,
+                    RT_NULL,
+                    rt_thd_stack[2],
+                    sizeof(rt_thd_stack[2]),
+                    99,
+                    period);
+    rt_thread_init(&thd_calcperf,
+                    "CalcPerf",
+                    calcperf,
+                    RT_NULL,
+                    rt_thd_stack[3],
+                    sizeof(rt_thd_stack[3]),
+                    99,
+                    period);
 }
-void create_tasks(){
-        rt_task_create(&deduceinputs, "DeduceInputs", 0, 99, 0);
-        rt_task_create(&getthermo, "GetThermo", 0, 99, 0);
-        rt_task_create(&getgeo, "GetGeo", 0, 99, 0);
-        rt_task_create(&calcperf, "CalcPerf", 0, 99, 0);
+
+void start_tasks()
+{
+    rt_thread_startup(&thd_deduceinputs);
+    rt_thread_startup(&thd_getthermo);
+    rt_thread_startup(&thd_getgeo);         
+    rt_thread_startup(&thd_calcperf);      
 }
 
-void start_tasks(){
-                rt_task_set_priority(&deduceinputs,HIGHEST);
-                rt_task_set_priority(&getthermo,HIGH);
-                rt_task_set_priority(&getgeo,MID);
-                rt_task_set_priority(&calcperf,LOW);
-
-                rt_task_start(&deduceinputs, &deduceInputs, 0);
-		rt_task_start(&getthermo, &getThermo, 0);
-                rt_task_start(&getgeo, &getGeo, 0);
-                rt_task_start(&calcperf, &calcPerf, 0);                
-                
-}
 void catch_signal(int sig) {}
 
 void wait_for_ctrl_c() {
@@ -41,52 +60,45 @@ void wait_for_ctrl_c() {
   /* wait for SIGINT (CTRL-C) or SIGTERM signal */
 	pause();
 }
-void cleanup(){
-rt_task_delete(&deduceinputs);
-rt_task_delete(&getthermo);
-rt_task_delete(&getgeo);
-rt_task_delete(&calcperf);
+
+void cleanup()
+{
+  rt_thread_delete(&thd_deduceinputs);
+  rt_thread_delete(&thd_getthermo);
+  rt_thread_delete(&thd_getgeo);
+  rt_thread_delete(&thd_calcperf);
 }
 
 int main(int argc,char *argv[])
 {
-        init_xenomai();
-        double BM_Start, BM_End;
-        BM_Start = rt_timer_read();
-        rt_printf("XenoJetBench: An Open Source Hard-Real-Time Multiprocessor Benchmark \n\n");
-        int i=0;
+  float BM_Start, BM_End;
+  BM_Start = rt_timer_read();
+  rt_kprintf("XenoJetBench: An Open Source Hard-Real-Time Multiprocessor Benchmark \n\n");
+  int i=0;
 	FILE * file;
-	double a,b,c,d;
+	float a,b,c,d;
 	int NumPoints=0,NumMissed=0;
-	double x, pi, sum;
-	double step = 1.0/(double) num_steps;
+	float x, pi, sum;
+	float step = 1.0/(float) num_steps;
 	int tid1, tid2, tid3;
-	double *StartPiTime, *EndPiTime, *PiTime;
-	double used, usedTime, TotalUsed;
-	double TotalTime=0, StartTime, EndTime, ExecTime, ExecTotTime;
-	double TimePoint, TotalTimePoint=0;
+	float *StartPiTime, *EndPiTime, *PiTime;
+	float used, usedTime, TotalUsed;
+	float TotalTime=0, StartTime, EndTime, ExecTime, ExecTotTime;
+	float TimePoint, TotalTimePoint=0;
 
-        create_tasks();
- 
-	StartPiTime = (double *)calloc(16,sizeof(double));
-	EndPiTime = (double *)calloc(16,sizeof(double));
-	PiTime = (double *)calloc(16,sizeof(double));
+  create_tasks();
+  
+  /* These shall be set to static */
+	StartPiTime = (float *)calloc(16,sizeof(float));
+	EndPiTime = (float *)calloc(16,sizeof(float));
+	PiTime = (float *)calloc(16,sizeof(float));
         
-	 omp_set_num_threads(NUM_THREADS);
-        
-        if(argv[1]==NULL)
-	{
-		rt_printf("Choose your engine :\n");
-		rt_printf("   1:Turbojet\n");
-		rt_printf("   2:Afterburner\n");
-		rt_printf("   3:Turbofan\n");
-		return(0);
-	}
-	if(argc != 2)
-    {
-      rt_printf("invalid number of arguments\n");
-      return(0);
-    }
+	omp_set_num_threads(NUM_THREADS);
+
+	rt_kprintf("Choose your engine :\n");
+	rt_kprintf("   1:Turbojet\n");
+	rt_kprintf("   2:Afterburner\n");
+	rt_kprintf("   3:Turbofan\n");
 
 	//define paramaters
 	defaultParam();
@@ -283,16 +295,16 @@ rt_printf("\n==> Ending XenoJetBench Execution \n\n");
 
 
 /* Utility to convert degree in radian */
-double deg2rad(double deg,double pi)
+float deg2rad(float deg,float pi)
 {
 	return(deg/180*pi);
 }
 
 /* Utility to get gamma as a function of temperature */
-double getGama(double temp)
+float getGama(float temp)
 {
 rt_task_set_periodic(NULL, TM_NOW, 0.001); 
-double number,a,b,c,d ;
+float number,a,b,c,d ;
       a =  -7.6942651e-13;
       b =  1.3764661e-08;
       c =  -7.8185709e-05;
@@ -302,10 +314,10 @@ double number,a,b,c,d ;
 }
 
 /* Utility to get cp as a function of temperature */
-double getCp(double temp)
+float getCp(float temp)
 {
 rt_task_set_periodic(NULL, TM_NOW, 0.001); 
-double number,a,b,c,d ;
+float number,a,b,c,d ;
       // BTU/R
       a =  -4.4702130e-13;
       b =  -5.1286514e-10;
@@ -316,11 +328,11 @@ double number,a,b,c,d ;
 }
 
 /* Utility to get the Mach number given the corrected airflow per area */
-double getMach (int sub, double corair, double gama1)
+float getMach (int sub, float corair, float gama1)
 {
 rt_task_set_periodic(NULL, TM_NOW, 0.001); 
-double number,chokair;                  // iterate for mach number
-double deriv,machn,macho,airo,airn;
+float number,chokair;                  // iterate for mach number
+float deriv,machn,macho,airo,airn;
 int iter ;
       chokair = getAir(1.0, gama1) ;
       if (corair > chokair) {
@@ -350,10 +362,10 @@ int iter ;
 }
 
 /* Utility to get the corrected airflow per area given the Mach number */
-double getAir(double mach, double gama2)
+float getAir(float mach, float gama2)
 {
 rt_task_set_periodic(NULL, TM_NOW, 0.001); 
-double number,fac1,fac2;
+float number,fac1,fac2;
      fac2 = (gama2+1.0)/(2.0*(gama2-1.0)) ;
      fac1 = fpow((1.0+.5*(gama2-1.0)*mach*mach),fac2);
      number =  .50161*sqroot(gama2) * mach/ fac1 ;
@@ -362,12 +374,12 @@ double number,fac1,fac2;
 }
 
 /* Analysis for Rayleigh flow */
-double getRayleighLoss(double mach1, double ttrat, double tlow)
+float getRayleighLoss(float mach1, float ttrat, float tlow)
 {
 rt_task_set_periodic(NULL, TM_NOW, 0.001); 
-double number ;
-double wc1,wc2,mgueso,mach2,g1,gm1,g2,gm2 ;
-double fac1,fac2,fac3,fac4;
+float number ;
+float wc1,wc2,mgueso,mach2,g1,gm1,g2,gm2 ;
+float fac1,fac2,fac3,fac4;
       g1 = getGama(tlow);
       gm1 = g1 - 1.0 ;
       wc1 = getAir(mach1,g1);
@@ -397,11 +409,11 @@ void defaultParam()
 rt_task_set_periodic(NULL, TM_NOW, 0.001);
 int i ;
 //allocate memory for arrays
-trat = (double *)calloc(20,sizeof(double));
-tt = (double *)calloc(20,sizeof(double));
-prat = (double *)calloc(20,sizeof(double));
-pt = (double *)calloc(20,sizeof(double));
-eta = (double *)calloc(20,sizeof(double));
+trat = (float *)calloc(20,sizeof(float));
+tt = (float *)calloc(20,sizeof(float));
+prat = (float *)calloc(20,sizeof(float));
+pt = (float *)calloc(20,sizeof(float));
+eta = (float *)calloc(20,sizeof(float));
 
         tref = 459.6;
         g0 = g0d = 32.2 ;
@@ -496,11 +508,11 @@ rt_task_set_periodic(NULL, TM_NOW, 0.001);
 void getThermo()
 {
 rt_task_set_periodic(NULL, TM_NOW, 0.001);
-gam = (double *)calloc(20,sizeof(double));
-cp = (double *)calloc(20,sizeof(double));
-double m5;
-double delhc,delhht,delhf,delhlt;
-double deltc,deltht,deltf,deltlt;
+gam = (float *)calloc(20,sizeof(float));
+cp = (float *)calloc(20,sizeof(float));
+float m5;
+float delhc,delhht,delhf,delhlt;
+float deltc,deltht,deltf,deltlt;
 
   //  inlet recovery
   if (fsmach > 1.0 )   // supersonic
@@ -640,7 +652,7 @@ double deltc,deltht,deltf,deltlt;
 void calcPerf()
 {
 rt_task_set_periodic(NULL, TM_NOW, 0.001); 
-double fac1, game, cpe, cp3;
+float fac1, game, cpe, cp3;
 
   cp3 = getCp(tt[3]);                  //BTU/lbm R
   g0 = 32.2 ;
@@ -782,10 +794,10 @@ rt_task_set_periodic(NULL, TM_NOW, 0.001);
 }
 
 // *********** Math utilities ***********
-double sqroot(double number)
+float sqroot(float number)
 {
 rt_task_set_periodic(NULL, TM_NOW, 0.001); 
-	double x0, x, prec=1;
+	float x0, x, prec=1;
 	if(number < 0)
 	{
 		printf("error sqroot\n");
@@ -803,18 +815,18 @@ rt_task_set_periodic(NULL, TM_NOW, 0.001);
 return(x);
 }
 
-double fabs(double x)
+float fabs(float x)
 {
 	if (x < 0) return -x;
 	else return x;
 }
 
-double log(double x)
+float log(float x)
 {
 rt_task_set_periodic(NULL, TM_NOW, 0.001); 
 
-double number = 0;
-double coeff = -1;
+float number = 0;
+float coeff = -1;
 int i = 1;
 	if (x<=0)
 	{
@@ -840,12 +852,12 @@ int i = 1;
 return number;
 }
 
-double expo(double x)
+float expo(float x)
 {
 rt_task_set_periodic(NULL, TM_NOW, 0.001); 
 
-double number = 1;
-double coeff = 1;
+float number = 1;
+float coeff = 1;
 int i = 1;
 	// if x > log(DBL_MAX)
 	if (x>709.782712893384)
@@ -863,12 +875,12 @@ int i = 1;
 return number;
 }
 
-double fpow(double x, double y)
+float fpow(float x, float y)
 {
 int partieEntiere = y;
 
 	// If x<0 and y not integer
-	if (x<0 && (double)partieEntiere!=y)
+	if (x<0 && (float)partieEntiere!=y)
 	{
 		printf("error power undefined\n");
 		return 0;
@@ -881,13 +893,13 @@ int partieEntiere = y;
 	// now x>0
 	// factorize y into integer and decimal parts
 	// For example : 12.345^67.890123 = (12.345^67) * (12.345^0.890123)
-	// integer part : pow(double, int) and the decimal par : x^y = exp(y*ln(x))
+	// integer part : pow(float, int) and the decimal par : x^y = exp(y*ln(x))
 return power(x, partieEntiere) * expo((y-partieEntiere)*log(x));
 }
 
-double power(double x, int y)
+float power(float x, int y)
 {
-double number = 1;
+float number = 1;
 int i;
 // x^(-y) = 1/(x^y)
 	if (y<0)
