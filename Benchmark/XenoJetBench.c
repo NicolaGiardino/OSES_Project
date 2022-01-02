@@ -54,7 +54,8 @@ void start_tasks()
 
 void catch_signal(int sig) {}
 
-void wait_for_ctrl_c() {
+void wait_for_ctrl_c()
+{
 	signal(SIGTERM, catch_signal);
 	signal(SIGINT, catch_signal);
   /* wait for SIGINT (CTRL-C) or SIGTERM signal */
@@ -69,7 +70,7 @@ void cleanup()
   rt_thread_delete(&thd_calcperf);
 }
 
-int main(int argc,char *argv[])
+int main()
 {
   float BM_Start, BM_End;
   BM_Start = rt_timer_read();
@@ -406,246 +407,243 @@ float fac1,fac2,fac3,fac4;
 /* Default parameters */
 void defaultParam()
 {
+/* Why is this set to periodic? */
 rt_task_set_periodic(NULL, TM_NOW, 0.001);
-int i ;
-//allocate memory for arrays
-trat = (float *)calloc(20,sizeof(float));
-tt = (float *)calloc(20,sizeof(float));
-prat = (float *)calloc(20,sizeof(float));
-pt = (float *)calloc(20,sizeof(float));
-eta = (float *)calloc(20,sizeof(float));
 
-        tref = 459.6;
-        g0 = g0d = 32.2 ;
-        gama = 1.4 ;
-  for(i=0;i<=19;++i)
+    int i ;
+
+    tref = 459.6;
+    g0 = g0d = 32.2 ;
+    gama = 1.4 ;
+    for(i=0;i<=19;++i)
     {
-      trat[i]=1.0;
-      tt[i]=518.6;
-      prat[i]=1.0;
-      pt[i]=14.7;
-      eta[i]=1.0;
+        trat[i]=1.0;
+        tt[i]=518.6;
+        prat[i]=1.0;
+        pt[i]=14.7;
+        eta[i]=1.0;
     }
 
   	tt[4] = tt4 = tt4d = 2500. ;
-        tt[7] = tt7 = tt7d = 2500. ;
-        prat[3] = p3p2d = 8.0 ;
-        prat[13] = p3fp2d = 2.0 ;
-        byprat = 1.0 ;
-        abflag = 0 ;
+    tt[7] = tt7 = tt7d = 2500. ;
+    prat[3] = p3p2d = 8.0 ;
+    prat[13] = p3fp2d = 2.0 ;
+    byprat = 1.0 ;
+    abflag = 0 ;
 
-        fhvd = fhv = 18600. ;
-        a2 = acore = 2.0 ;
-        acap = .9*a2 ;
-        a8rat = .35 ;
-        a8 = .7 ;
-        a8d = .40 ;
-        arsched = 0 ;
-        afan = 2.0 ;
-        a4 = .418 ;
+    fhvd = fhv = 18600. ;
+    a2 = acore = 2.0 ;
+    acap = .9*a2 ;
+    a8rat = .35 ;
+    a8 = .7 ;
+    a8d = .40 ;
+    arsched = 0 ;
+    afan = 2.0 ;
+    a4 = .418 ;
 
-        u0min  = 0.0 ;   u0max = 1500.;
-        altmin = 0.0 ;   altmax = 60000. ;
-        thrmin = 30;     thrmax = 100 ;
-        etmin  = .5;     etmax  = 1.0 ;
-        cprmin = 1.0;   cprmax = 50.0 ;
-        bypmin = 0.0;   bypmax = 10.0 ;
-        fprmin = 1.0;   fprmax = 2.0 ;
-        t4min = 1000.0;   t4max = 3200.0 ;
-        t7min = 1000.0;   t7max = 4000.0 ;
-        a8max = 0.4 ;
+    u0min  = 0.0 ;   u0max = 1500.;
+    altmin = 0.0 ;   altmax = 60000. ;
+    thrmin = 30;     thrmax = 100 ;
+    etmin  = .5;     etmax  = 1.0 ;
+    cprmin = 1.0;   cprmax = 50.0 ;
+    bypmin = 0.0;   bypmax = 10.0 ;
+    fprmin = 1.0;   fprmax = 2.0 ;
+    t4min = 1000.0;   t4max = 3200.0 ;
+    t7min = 1000.0;   t7max = 4000.0 ;
+    a8max = 0.4 ;
 
-        pmax = 20.0;  tmin = -100.0 + tref;  tmax = 100.0 + tref ;
+    pmax = 20.0;  tmin = -100.0 + tref;  tmax = 100.0 + tref ;
 
-        weight = 1000. ;
-        dfan = 293.02 ;
+    weight = 1000. ;
+    dfan = 293.02 ;
 	dcomp = 293.02 ;
-        dburner  = 515.2 ;
+    dburner  = 515.2 ;
 	dturbin = 515.2 ;
-        dnozl = 515.2 ;
+    dnozl = 515.2 ;
 }
 
 /* Utility to have mach speed, atmospheric pressure and temperature */
 void deduceInputs()
 {
-rt_task_set_periodic(NULL, TM_NOW, 0.001);
+    rt_task_set_periodic(NULL, TM_NOW, 0.001);
   	Rgas = 1718. ;                /* ft2/sec2 R */
 
-         alt = altd ;
-         if (alt < 36152. ) {
-            ts0 = 518.6 - 3.56 * alt / 1000. ;
-            ps0 = 2116. * fpow(ts0/518.6, 5.256) ;
-         }
-         if (alt >= 36152. && alt <= 82345.) {   // Stratosphere
-            ts0 = 389.98 ;
-            ps0 = 2116. * .2236 *
-                expo((36000.-alt)/(53.35*389.98)) ;
-         }
-         if (alt >= 82345.) {
-            ts0 = 389.98 + 1.645 * (alt-82345)/1000. ;
-            ps0 = 2116. *.02456 * fpow(ts0/389.98,-11.388) ;
-         }
+    alt = altd ;
+    if (alt < 36152. ) {
+        ts0 = 518.6 - 3.56 * alt / 1000. ;
+        ps0 = 2116. * fpow(ts0/518.6, 5.256) ;
+    }
+    if (alt >= 36152. && alt <= 82345.) {   // Stratosphere
+        ts0 = 389.98 ;
+        ps0 = 2116. * .2236 *
+            expo((36000.-alt)/(53.35*389.98)) ;
+    }
+    if (alt >= 82345.) {
+        ts0 = 389.98 + 1.645 * (alt-82345)/1000. ;
+        ps0 = 2116. *.02456 * fpow(ts0/389.98,-11.388) ;
+    }
 
-       a0 = sqroot(gama*Rgas*ts0) ;             // speed of sound ft/sec
+    a0 = sqroot(gama*Rgas*ts0) ;             // speed of sound ft/sec
 
-          u0 = u0d *5280./3600. ;               // airspeed ft/sec
-          fsmach = u0/a0 ;
-          q0 = gama / 2.0*fsmach*fsmach*ps0 ;
+    u0 = u0d *5280./3600. ;               // airspeed ft/sec
+    fsmach = u0/a0 ;
+    q0 = gama / 2.0*fsmach*fsmach*ps0 ;
 
-       if (u0 > .0001) rho0 = q0 /(u0*u0) ;
-       else rho0 = 1.0 ;
+    if (u0 > .0001) rho0 = q0 /(u0*u0) ;
+    else rho0 = 1.0 ;
 
-       tt[0] = ts0*(1.0 + .5 * (gama -1.0) * fsmach * fsmach) ;
-       pt[0] = ps0 * fpow(tt[0]/ts0,gama/(gama-1.0)) ;
-       ps0 = ps0 / 144. ;
-       pt[0] = pt[0] / 144. ;
-       cpair = getCp(tt[0]);              //BTU/lbm R
-       tsout = ts0-459.6 ;
-       psout = ps0 ;
+    tt[0] = ts0*(1.0 + .5 * (gama -1.0) * fsmach * fsmach) ;
+    pt[0] = ps0 * fpow(tt[0]/ts0,gama/(gama-1.0)) ;
+    ps0 = ps0 / 144. ;
+    pt[0] = pt[0] / 144. ;
+    cpair = getCp(tt[0]);              //BTU/lbm R
+    tsout = ts0-459.6 ;
+    psout = ps0 ;
 }
 
 /* Utility to have Thermodynamic parameters */
 void getThermo()
 {
-rt_task_set_periodic(NULL, TM_NOW, 0.001);
-gam = (float *)calloc(20,sizeof(float));
-cp = (float *)calloc(20,sizeof(float));
-float m5;
-float delhc,delhht,delhf,delhlt;
-float deltc,deltht,deltf,deltlt;
+    rt_task_set_periodic(NULL, TM_NOW, 0.001);
+    gam = (float *)calloc(20,sizeof(float));
+    cp = (float *)calloc(20,sizeof(float));
+    float m5;
+    float delhc,delhht,delhf,delhlt;
+    float deltc,deltht,deltf,deltlt;
 
-  //  inlet recovery
-  if (fsmach > 1.0 )   // supersonic
-    {
-      prat[2] = 1.0 - .075*fpow(fsmach - 1.0, 1.35) ;
-    }
-  else {
-    prat[2] = 1.0 ;
-  }
-  eta[2] = prat[2] ;
+      //  inlet recovery
+      if (fsmach > 1.0 )   // supersonic
+      {
+          prat[2] = 1.0 - .075*fpow(fsmach - 1.0, 1.35) ;
+      }
+      else
+      {
+          prat[2] = 1.0 ;
+      }
+      eta[2] = prat[2] ;
 
-  //protection for overwriting input
-  if (eta[3] < .5) eta[3] = .5 ;
-  if (eta[5] < .5) eta[5] = .5 ;
-  trat[7] = 1.0 ;
-  prat[7] = 1.0 ;
-  tt[2] = tt[1] = tt[0];
-  pt[1] = pt[0] ;
-  gam[2] = getGama(tt[2]) ;
-  cp[2]  = getCp(tt[2]);
-  pt[2] = pt[1] * prat[2] ;
+      //protection for overwriting input
+      if (eta[3] < .5) eta[3] = .5 ;
+      if (eta[5] < .5) eta[5] = .5 ;
+      trat[7] = 1.0 ;
+      prat[7] = 1.0 ;
+      tt[2] = tt[1] = tt[0];
+      pt[1] = pt[0] ;
+      gam[2] = getGama(tt[2]) ;
+      cp[2]  = getCp(tt[2]);
+      pt[2] = pt[1] * prat[2] ;
 
-  // design - p3p2 specified - tt4 specified
-  if (engine <= 2) //turbojet
-    {
-      prat[3] = p3p2d ;                      // core compressor
-      if (prat[3] < .5) prat[3] = .5 ;
+      // design - p3p2 specified - tt4 specified
+      if (engine <= 2) //turbojet
+      {
+          prat[3] = p3p2d ;                      // core compressor
+          if (prat[3] < .5) prat[3] = .5 ;
 
-      delhc = (cp[2]*tt[2]/eta[3])*(fpow(prat[3],(gam[2]-1.0)/gam[2])-1.0) ; //0.25
-      deltc = delhc / cp[2] ;
-      pt[3] = pt[2] * prat[3] ;
-      tt[3] = tt[2] + deltc ;
-      trat[3] = tt[3]/tt[2] ;
-      gam[3] = getGama(tt[3]) ;
-      cp[3]  = getCp(tt[3]);
-      tt[4] = tt4 * throtl/100.0 ;
-      gam[4] = getGama(tt[4]) ;
-      cp[4]  = getCp(tt[4]);
-      trat[4] = tt[4] / tt[3] ;
-      pt[4] = pt[3] * prat[4] ;
-      delhht = delhc ;
-      deltht = delhht / cp[4] ;
-      tt[5] = tt[4] - deltht ;
-      gam[5] = getGama(tt[5]) ;
-      cp[5]  = getCp(tt[5]);
-      trat[5] = tt[5]/tt[4] ;
-      prat[5] = fpow((1-delhht/cp[4]/tt[4]/eta[5]),(gam[4]/(gam[4]-1.0)));
-      pt[5] = pt[4] * prat[5] ;
+          delhc = (cp[2]*tt[2]/eta[3])*(fpow(prat[3],(gam[2]-1.0)/gam[2])-1.0) ; //0.25
+          deltc = delhc / cp[2] ;
+          pt[3] = pt[2] * prat[3] ;
+          tt[3] = tt[2] + deltc ;
+          trat[3] = tt[3]/tt[2] ;
+          gam[3] = getGama(tt[3]) ;
+          cp[3]  = getCp(tt[3]);
+          tt[4] = tt4 * throtl/100.0 ;
+          gam[4] = getGama(tt[4]) ;
+          cp[4]  = getCp(tt[4]);
+          trat[4] = tt[4] / tt[3] ;
+          pt[4] = pt[3] * prat[4] ;
+          delhht = delhc ;
+          deltht = delhht / cp[4] ;
+          tt[5] = tt[4] - deltht ;
+          gam[5] = getGama(tt[5]) ;
+          cp[5]  = getCp(tt[5]);
+          trat[5] = tt[5]/tt[4] ;
+          prat[5] = fpow((1-delhht/cp[4]/tt[4]/eta[5]),(gam[4]/(gam[4]-1.0)));
+          pt[5] = pt[4] * prat[5] ;
 
-      // fan conditions
-      prat[13] = 1.0 ;
-      trat[13] = 1.0 ;
-      tt[13]   = tt[2] ;
-      pt[13]   = pt[2] ;
-      gam[13]  = gam[2] ;
-      cp[13]   = cp[2] ;
-      prat[15] = 1.0 ;
-      pt[15]   = pt[5] ;
-      trat[15] = 1.0 ;
-      tt[15]   = tt[5] ;
-      gam[15]  = gam[5] ;
-      cp[15]   = cp[5] ;
-    }
+          // fan conditions
+          prat[13] = 1.0 ;
+          trat[13] = 1.0 ;
+          tt[13]   = tt[2] ;
+          pt[13]   = pt[2] ;
+          gam[13]  = gam[2] ;
+          cp[13]   = cp[2] ;
+          prat[15] = 1.0 ;
+          pt[15]   = pt[5] ;
+          trat[15] = 1.0 ;
+          tt[15]   = tt[5] ;
+          gam[15]  = gam[5] ;
+          cp[15]   = cp[5] ;
+      }
 
-  if(engine == 3)    //turbofan
-    {
-      prat[13] = p3fp2d ;
-      if (prat[13] < .5) prat[13] = .5 ;
+      if(engine == 3)    //turbofan
+      {
+          prat[13] = p3fp2d ;
+          if (prat[13] < .5) prat[13] = .5 ;
 
-      delhf = (cp[2]*tt[2]/eta[13])*(fpow(prat[13],(gam[2]-1.0)/gam[2])-1.0) ;
-      deltf = delhf / cp[2] ;
-      tt[13] = tt[2] + deltf ;
-      pt[13] = pt[2] * prat[13] ;
-      trat[13] = tt[13]/tt[2] ;
-      gam[13] = getGama(tt[13]) ;
-      cp[13]  = getCp(tt[13]);
-      prat[3] = p3p2d ;                      // core compressor
-      if (prat[3] < .5) prat[3] = .5 ;
+          delhf = (cp[2]*tt[2]/eta[13])*(fpow(prat[13],(gam[2]-1.0)/gam[2])-1.0) ;
+          deltf = delhf / cp[2] ;
+          tt[13] = tt[2] + deltf ;
+          pt[13] = pt[2] * prat[13] ;
+          trat[13] = tt[13]/tt[2] ;
+          gam[13] = getGama(tt[13]) ;
+          cp[13]  = getCp(tt[13]);
+          prat[3] = p3p2d ;                      // core compressor
+          if (prat[3] < .5) prat[3] = .5 ;
 
-      delhc = (cp[13]*tt[13]/eta[3])*(fpow(prat[3],(gam[13]-1.0)/gam[13])-1.0) ;
-      deltc = delhc / cp[13] ;
-      tt[3] = tt[13] + deltc ;
-      pt[3] = pt[13] * prat[3] ;
-      trat[3] = tt[3]/tt[13] ;
-      gam[3] = getGama(tt[3]) ;
-      cp[3]  = getCp(tt[3]);
-      tt[4] = tt4 * throtl/100.0 ;
-      pt[4] = pt[3] * prat[4] ;
-      gam[4] = getGama(tt[4]) ;
-      cp[4]  = getCp(tt[4]);
-      trat[4] = tt[4]/tt[3] ;
-      delhht = delhc ;
-      deltht = delhht / cp[4] ;
-      tt[5] = tt[4] - deltht ;
-      gam[5] = getGama(tt[5]) ;
-      cp[5]  = getCp(tt[5]);
-      trat[5] = tt[5]/tt[4] ;
-      prat[5] = fpow((1.0-delhht/cp[4]/tt[4]/eta[5]),(gam[4]/(gam[4]-1.0))) ;
-      pt[5] = pt[4] * prat[5] ;
-      delhlt = (1.0 + byprat) * delhf ;
-      deltlt = delhlt / cp[5] ;
-      tt[15] = tt[5] - deltlt ;
-      gam[15] = getGama(tt[15]) ;
-      cp[15]  = getCp(tt[15]);
-      trat[15] = tt[15]/tt[5] ;
-      prat[15] = fpow((1.0-delhlt/cp[5]/tt[5]/eta[5]),(gam[5]/(gam[5]-1.0))) ;
-      pt[15] = pt[5] * prat[15] ;
-    }
+          delhc = (cp[13]*tt[13]/eta[3])*(fpow(prat[3],(gam[13]-1.0)/gam[13])-1.0) ;
+          deltc = delhc / cp[13] ;
+          tt[3] = tt[13] + deltc ;
+          pt[3] = pt[13] * prat[3] ;
+          trat[3] = tt[3]/tt[13] ;
+          gam[3] = getGama(tt[3]) ;
+          cp[3]  = getCp(tt[3]);
+          tt[4] = tt4 * throtl/100.0 ;
+          pt[4] = pt[3] * prat[4] ;
+          gam[4] = getGama(tt[4]) ;
+          cp[4]  = getCp(tt[4]);
+          trat[4] = tt[4]/tt[3] ;
+          delhht = delhc ;
+          deltht = delhht / cp[4] ;
+          tt[5] = tt[4] - deltht ;
+          gam[5] = getGama(tt[5]) ;
+          cp[5]  = getCp(tt[5]);
+          trat[5] = tt[5]/tt[4] ;
+          prat[5] = fpow((1.0-delhht/cp[4]/tt[4]/eta[5]),(gam[4]/(gam[4]-1.0))) ;
+          pt[5] = pt[4] * prat[5] ;
+          delhlt = (1.0 + byprat) * delhf ;
+          deltlt = delhlt / cp[5] ;
+          tt[15] = tt[5] - deltlt ;
+          gam[15] = getGama(tt[15]) ;
+          cp[15]  = getCp(tt[15]);
+          trat[15] = tt[15]/tt[5] ;
+          prat[15] = fpow((1.0-delhlt/cp[5]/tt[5]/eta[5]),(gam[5]/(gam[5]-1.0))) ;
+          pt[15] = pt[5] * prat[15] ;
+      }
 
-  tt[7] = tt7;
+      tt[7] = tt7;
 
-  prat[6] = 1.0;
-  pt[6] = pt[15];
-  trat[6] = 1.0 ;
-  tt[6] = tt[15] ;
-  gam[6] = getGama(tt[6]) ;
-  cp[6]  = getCp(tt[6]);
+      prat[6] = 1.0;
+      pt[6] = pt[15];
+      trat[6] = 1.0 ;
+      tt[6] = tt[15] ;
+      gam[6] = getGama(tt[6]) ;
+      cp[6]  = getCp(tt[6]);
 
-  if (abflag > 0)   // afterburner
-  {
-    trat[7] = tt[7] / tt[6] ;
-    m5 = getMach(0,getAir(1.0,gam[5])*a4/acore,gam[5]) ;
-    prat[7] = getRayleighLoss(m5,trat[7],tt[6]) ;
-  }
-  tt[7] = tt[6] * trat[7] ;
-  pt[7] = pt[6] * prat[7] ;
-  gam[7] = getGama(tt[7]) ;
-  cp[7]  = getCp(tt[7]);
+      if (abflag > 0)   // afterburner
+      {
+          trat[7] = tt[7] / tt[6] ;
+          m5 = getMach(0,getAir(1.0,gam[5])*a4/acore,gam[5]) ;
+          prat[7] = getRayleighLoss(m5,trat[7],tt[6]) ;
+      }
+      tt[7] = tt[6] * trat[7] ;
+      pt[7] = pt[6] * prat[7] ;
+      gam[7] = getGama(tt[7]) ;
+      cp[7]  = getCp(tt[7]);
 
-  // engine press ratio EPReair
-  epr = prat[7]*prat[15]*prat[5]*prat[4]*prat[3]*prat[13];
-  // engine temp ratio ETR
-  etr = trat[7]*trat[15]*trat[5]*trat[4]*trat[3]*trat[13];
+      // engine press ratio EPReair
+      epr = prat[7]*prat[15]*prat[5]*prat[4]*prat[3]*prat[13];
+      // engine temp ratio ETR
+      etr = trat[7]*trat[15]*trat[5]*trat[4]*trat[3]*trat[13];
 }
 
 /* Utility to determine engine performance */

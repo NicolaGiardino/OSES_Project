@@ -41,13 +41,13 @@ static float tt4,tt4d,tt7,tt7d,p3p2d,p3fp2d,byprat,throtl;
 static float altd,u0d,fhvd,fhv;
 
 //arrays
-static float *trat;
-static float *tt;
-static float *prat;
-static float *pt;
-static float *eta;
-static float *gam;
-static float *cp;
+static float trat[20];
+static float tt[20];
+static float prat[20];
+static float pt[20];
+static float eta[20];
+static float gam[20];
+static float cp[20];
 
 static float u0min,u0max,altmin,altmax,thrmin,thrmax;
 static float etmin,etmax,cprmin,cprmax,bypmin,bypmax;

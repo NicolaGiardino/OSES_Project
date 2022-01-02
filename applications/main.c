@@ -10,6 +10,7 @@
 
 #include <rtthread.h>
 #include <rtdevice.h>
+#include "../Benchmark/XenoJetBench.h"
 
 #define LED_PIN 25
 
