@@ -28,11 +28,15 @@ void calcPerf();
 void getGeo();
 float deg2rad(float deg,float pi);
 float sqroot(float numb1er);
-float fabs(float x);
-float log(float x);
+float xfabs(float x);
+float xlog(float x);
 float expo(float x);
 float fpow(float x, float y);
 float power(float x, int y);
+
+void create_tasks();
+void cleanup();
+int xeno_main();
 
 static int engine;
 

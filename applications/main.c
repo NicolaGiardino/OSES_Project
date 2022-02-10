@@ -10,7 +10,7 @@
 
 #include <rtthread.h>
 #include <rtdevice.h>
-#include "../Benchmark/XenoJetBench.h"
+#include "../Benchmark/XenoJetBench.c"
 
 #define LED_PIN 25
 
@@ -20,12 +20,22 @@ int main(void)
 
     rt_pin_mode(LED_PIN, PIN_MODE_OUTPUT);
 
+    rt_pin_mode(24, PIN_MODE_INPUT);
+
+    int i = xeno_main();
+
     while (1)
     {
-        rt_pin_write(LED_PIN, 1);
-        rt_thread_mdelay(1000);
-        rt_pin_write(LED_PIN, 0);
-        rt_thread_mdelay(1000);
+        if(rt_pin_read(24))
+        {
+            rt_pin_write(LED_PIN, 1);
+            rt_thread_mdelay(1000);
+        }
+        else
+        {
+            rt_pin_write(LED_PIN, 0);
+            rt_thread_mdelay(1000);
+        }
     }
 }
 

@@ -72,7 +72,7 @@ void cleanup()
   rt_thread_delete(&thd_calcperf);
 }
 
-int main()
+int xeno_main()
 {
   float BM_Start, BM_End;
   BM_Start = rt_timer_read();
@@ -810,13 +810,13 @@ rt_task_set_periodic(NULL, TM_NOW, 0.001);
 return(x);
 }
 
-float fabs(float x)
+float xfabs(float x)
 {
 	if (x < 0) return -x;
 	else return x;
 }
 
-float log(float x)
+float xlog(float x)
 {
 rt_task_set_periodic(NULL, TM_NOW, 0.001);
 
