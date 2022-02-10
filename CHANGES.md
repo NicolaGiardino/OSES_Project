@@ -7,3 +7,4 @@ Changes:
 |Fulvio Castello | Feb 8 '22 | Commit 1 | Replaced pointers with arrays & added top comment for verified line |
 | Nicola di Gruttola Giardino | Feb 10 '22 | Commit 2 | Added xeno functions into the header and into the main |
 | Nicola di Gruttola Giardino | Feb 10 '22 | Commit 3 | Tested LED and Pushbutton, implemented reading accelerometer (To test) |
+| Fulvio Castello | Feb 10 '22 | Commit 4 | Heavily modifies several methods inside benchmark and added TODO list (for future reference) |
