@@ -1,11 +1,14 @@
 #include"XenoJetBench.h"
+#include"time.h"
 
-// verified till line 87
+// TODO: resolve references to OpenMP library and implement alternative to rt_task_wait_period(NULL);
 
 #define HIGHEST RT_THREAD_PRIORITY_MAX - 10 /* highest priority */
 #define HIGH RT_THREAD_PRIORITY_MAX - 9 /* high priority */
 #define MID RT_THREAD_PRIORITY_MAX - 8 /* medium priority */
 #define LOW RT_THREAD_PRIORITY_MAX - 7  /* low priority */
+
+#define period 0.001 /* default T for periodic tasks */
 
 static struct rt_thread  thd_deduceinputs, thd_getthermo, thd_getgeo, thd_calcperf;
 static rt_uint8_t rt_thd_stack[4][2048];
@@ -14,35 +17,35 @@ void create_tasks()
 {
     rt_thread_init(&thd_deduceinputs,
                     "DeduceInputs",
-                    deduceinputs,
+                    &deduceInputs,
                     RT_NULL,
                     rt_thd_stack[0],
                     sizeof(rt_thd_stack[0]),
-                    99,
+                    HIGHEST,
                     period);
     rt_thread_init(&thd_getthermo,
                     "GetThermo",
-                    getthermo,
+                    &getThermo,
                     RT_NULL,
                     rt_thd_stack[1],
                     sizeof(rt_thd_stack[1]),
-                    99,
+                    HIGH,
                     period);
     rt_thread_init(&thd_getgeo,
                     "GetGeo",
-                    getgeo,
+                    &getGeo,
                     RT_NULL,
                     rt_thd_stack[2],
                     sizeof(rt_thd_stack[2]),
-                    99,
+                    MID,
                     period);
     rt_thread_init(&thd_calcperf,
                     "CalcPerf",
-                    calcperf,
+                    &calcPerf,
                     RT_NULL,
                     rt_thd_stack[3],
                     sizeof(rt_thd_stack[3]),
-                    99,
+                    LOW,
                     period);
 }
 
@@ -56,14 +59,6 @@ void start_tasks()
 
 void catch_signal(int sig) {}
 
-void wait_for_ctrl_c()
-{
-	signal(SIGTERM, catch_signal);
-	signal(SIGINT, catch_signal);
-  /* wait for SIGINT (CTRL-C) or SIGTERM signal */
-	pause();
-}
-
 void cleanup()
 {
   rt_thread_delete(&thd_deduceinputs);
@@ -72,10 +67,9 @@ void cleanup()
   rt_thread_delete(&thd_calcperf);
 }
 
-int xeno_main()
+int xeno_main(int engine)
 {
-  float BM_Start, BM_End;
-  BM_Start = rt_timer_read();
+  time_t BM_Start = time(NULL), BM_End;
   rt_kprintf("XenoJetBench: An Open Source Hard-Real-Time Multiprocessor Benchmark \n\n");
   int i=0;
 	FILE * file;
@@ -86,7 +80,7 @@ int xeno_main()
 	int tid1, tid2, tid3;
 	float StartPiTime[16], EndPiTime[16], PiTime[16];
 	float used, usedTime, TotalUsed;
-	float TotalTime=0, StartTime, EndTime, ExecTime, ExecTotTime;
+	time_t TotalTime=0, StartTime, EndTime, ExecTime, ExecTotTime;
 	float TimePoint, TotalTimePoint=0;
 
   create_tasks();
@@ -101,30 +95,29 @@ int xeno_main()
 	//define paramaters
 	defaultParam();
 
-	engine = atoi(argv[1]);
 	if(engine == 1)
     {
 
 
-		rt_printf("engine %d : Turbojet is selected\n\n",engine);
+		rt_kprintf("engine %d : Turbojet is selected\n\n",engine);
     }
 	else if(engine == 2)
     {
-		rt_printf("engine %d : Afterburner is selected\n\n",engine);
+		rt_kprintf("engine %d : Afterburner is selected\n\n",engine);
     }
 	else if(engine == 3)
     {
-		rt_printf("Engine %d : Turbofan is selected\n\n",engine);
+		rt_kprintf("Engine %d : Turbofan is selected\n\n",engine);
     }
 	else
     {
-		rt_printf("Wrong engine choice [Select from 1,2 or 3] \n");
+		rt_kprintf("Wrong engine choice [Select from 1,2 or 3] \n");
 		return(0);
     }
 
-        rt_printf(" ==> Starting XenoJetBench Execution \n\n");
+        rt_kprintf(" ==> Starting XenoJetBench Execution \n\n");
 	//header for results
-	rt_printf("T,ExecTime,  Spd| Alt |  Thr| Mach|Press| Temp| Fnet|Fgros|RamDr|FlFlo|TSFC|Airfl|Weight|Fn/W\n");
+	rt_kprintf("T,ExecTime,  Spd| Alt |  Thr| Mach|Press| Temp| Fnet|Fgros|RamDr|FlFlo|TSFC|Airfl|Weight|Fn/W\n");
 
 	//open the Inputs file
 	file=fopen( "input.txt", "r" );
@@ -166,7 +159,7 @@ int xeno_main()
 	{
 		if(a<0 || a>1500)
 		{
-			rt_printf("Warning : incorrect speed for point %d\n",NumPoints);
+			rt_kprintf("Warning : incorrect speed for point %d\n",NumPoints);
 			u0d=0;
 		}
 		else
@@ -175,7 +168,7 @@ int xeno_main()
 
 		if(b<0 || b>50000)
 		{
-			rt_printf("Warning : incorrect altitude for point %d\n",NumPoints);
+			rt_kprintf("Warning : incorrect altitude for point %d\n",NumPoints);
 			altd = 0;
 		}
 		else
@@ -184,7 +177,7 @@ int xeno_main()
 
 		if(c<45 || c>90)
 		{
-			rt_printf("Warning : incorrect throttle for point %d\n",NumPoints);
+			rt_kprintf("Warning : incorrect throttle for point %d\n",NumPoints);
 			throtl = 100;
 		}
 		else
@@ -193,7 +186,7 @@ int xeno_main()
 
 		if(d<0)
 		{
-			rt_printf("Warning : incorrect throttle for point %d\n",NumPoints);
+			rt_kprintf("Warning : incorrect throttle for point %d\n",NumPoints);
 			TimePoint = 0;
 		}
 		else
@@ -207,11 +200,11 @@ int xeno_main()
 #pragma omp parallel private(i) shared(u0d,altd,throtl)
 {
 
-                StartTime = rt_timer_read();
+                StartTime = time(NULL);
 
                 start_tasks();
 
-                EndTime = rt_timer_read();
+                EndTime = time(NULL);
 		ExecTime = (EndTime - StartTime)/1000000000;
 
 
@@ -232,34 +225,34 @@ int xeno_main()
 //*********** PRINT RESULTS ************
 	if(used > 1)
 	{
-		rt_printf("%d,%7lf, %4.0lf|%5.0lf|%5.1lf|%5.3lf|%5.2lf|%5.1lf|%5.0lf|%5.0lf|%5.0lf|%5.0lf|%4.2lf|%5.1lf|%6.2lf|%4.2lf\nDeadline missed : %3.1lf%% used for point %d\n"
+		rt_kprintf("%d,%7lf, %4.0lf|%5.0lf|%5.1lf|%5.3lf|%5.2lf|%5.1lf|%5.0lf|%5.0lf|%5.0lf|%5.0lf|%4.2lf|%5.1lf|%6.2lf|%4.2lf\nDeadline missed : %3.1lf%% used for point %d\n"
 			,tid3,ExecTotTime,u0d,altd,throtl,fsmach,psout,tsout,fnlb,fglb,drlb,flflo,sfc,eair,weight,fnlb/weight, used*100, NumPoints);
 		NumMissed ++;
 		TotalTimePoint += usedTime;
 	}
 
 	else
-		rt_printf("%d,%7lf, %4.0lf|%5.0lf|%5.1lf|%5.3lf|%5.2lf|%5.1lf|%5.0lf|%5.0lf|%5.0lf|%5.0lf|%4.2lf|%5.1lf|%6.2lf|%4.2lf\n     %3.1lf%% used for point %d\n"
+		rt_kprintf("%d,%7lf, %4.0lf|%5.0lf|%5.1lf|%5.3lf|%5.2lf|%5.1lf|%5.0lf|%5.0lf|%5.0lf|%5.0lf|%4.2lf|%5.1lf|%6.2lf|%4.2lf\n     %3.1lf%% used for point %d\n"
 			, tid3,ExecTotTime,u0d,altd,throtl,fsmach,psout,tsout,fnlb,fglb,drlb,flflo,sfc,eair,weight,fnlb/weight, used*100, NumPoints);
 
 
 	}// End of if(!feof)
 	}// End of while(!feof)
 
-rt_printf("\n==> Ending XenoJetBench Execution \n\n");
+rt_kprintf("\n==> Ending XenoJetBench Execution \n\n");
 
 }// End of parallel area
 
 	// Close the file
 	fclose( file );
-	rt_printf("\n========================================================\n");
+	rt_kprintf("\n========================================================\n");
 
-	rt_printf("    XenoJetBench Successfully Terminated\n\n");
-	rt_printf("==> Results\n    Total execution time is : %lf with %d missed deadline\n", (TotalTime)/NUM_THREADS, NumMissed);
-	rt_printf("    Which represents %3.1lf%% of\n",TotalUsed*100/NumPoints);
-	rt_printf("    Real time used : %lf\n", TotalTimePoint/NUM_THREADS);
-	rt_printf("    Number of threads : %d\n", NUM_THREADS);
-	rt_printf("    Number of points : %d\n\n",NumPoints);
+	rt_kprintf("    XenoJetBench Successfully Terminated\n\n");
+	rt_kprintf("==> Results\n    Total execution time is : %lf with %d missed deadline\n", (TotalTime)/NUM_THREADS, NumMissed);
+	rt_kprintf("    Which represents %3.1lf%% of\n",TotalUsed*100/NumPoints);
+	rt_kprintf("    Real time used : %lf\n", TotalTimePoint/NUM_THREADS);
+	rt_kprintf("    Number of threads : %d\n", NUM_THREADS);
+	rt_kprintf("    Number of points : %d\n\n",NumPoints);
 
 	free(trat);
 	free(tt);
@@ -275,16 +268,14 @@ rt_printf("\n==> Ending XenoJetBench Execution \n\n");
         cleanup();
 
 
-        rt_printf("    XenoJetBench Start time : %lf secs\n ", BM_Start/1000000000);
+        rt_kprintf("    XenoJetBench Start time : %lf secs\n ", BM_Start/1000000000);
 
-        BM_End = rt_timer_read();
+        BM_End = time(NULL);
 
-        rt_printf("   XenoJetBench End time : %lf secs\n ", BM_End/1000000000);
-        rt_printf("   Total Benchmark time : %lf secs\n\nPress ctrl+C to EXIT XenoJetBench \n ", (BM_End - BM_Start)/1000000000);
+        rt_kprintf("   XenoJetBench End time : %lf secs\n ", BM_End/1000000000);
+        rt_kprintf("   Total Benchmark time : %lf secs\n\nPress ctrl+C to EXIT XenoJetBench \n ", (BM_End - BM_Start)/1000000000);
 
-	rt_printf("\n========================================================\n");
-
-        wait_for_ctrl_c();
+	rt_kprintf("\n========================================================\n");
 
         return(0);
 
@@ -301,7 +292,7 @@ float deg2rad(float deg,float pi)
 /* Utility to get gamma as a function of temperature */
 float getGama(float temp)
 {
-rt_task_set_periodic(NULL, TM_NOW, 0.001);
+// rt_task_set_periodic(NULL, TM_NOW, 0.001);
 float number,a,b,c,d ;
       a =  -7.6942651e-13;
       b =  1.3764661e-08;
@@ -314,7 +305,7 @@ float number,a,b,c,d ;
 /* Utility to get cp as a function of temperature */
 float getCp(float temp)
 {
-rt_task_set_periodic(NULL, TM_NOW, 0.001);
+// rt_task_set_periodic(NULL, TM_NOW, 0.001);
 float number,a,b,c,d ;
       // BTU/R
       a =  -4.4702130e-13;
@@ -328,7 +319,7 @@ float number,a,b,c,d ;
 /* Utility to get the Mach number given the corrected airflow per area */
 float getMach (int sub, float corair, float gama1)
 {
-rt_task_set_periodic(NULL, TM_NOW, 0.001);
+// rt_task_set_periodic(NULL, TM_NOW, 0.001);
 float number,chokair;                  // iterate for mach number
 float deriv,machn,macho,airo,airn;
 int iter ;
@@ -362,7 +353,7 @@ int iter ;
 /* Utility to get the corrected airflow per area given the Mach number */
 float getAir(float mach, float gama2)
 {
-rt_task_set_periodic(NULL, TM_NOW, 0.001);
+// rt_task_set_periodic(NULL, TM_NOW, 0.001);
 float number,fac1,fac2;
      fac2 = (gama2+1.0)/(2.0*(gama2-1.0)) ;
      fac1 = fpow((1.0+.5*(gama2-1.0)*mach*mach),fac2);
@@ -374,7 +365,7 @@ float number,fac1,fac2;
 /* Analysis for Rayleigh flow */
 float getRayleighLoss(float mach1, float ttrat, float tlow)
 {
-rt_task_set_periodic(NULL, TM_NOW, 0.001);
+// rt_task_set_periodic(NULL, TM_NOW, 0.001);
 float number ;
 float wc1,wc2,mgueso,mach2,g1,gm1,g2,gm2 ;
 float fac1,fac2,fac3,fac4;
@@ -405,7 +396,7 @@ float fac1,fac2,fac3,fac4;
 void defaultParam()
 {
 /* Why is this set to periodic? */
-rt_task_set_periodic(NULL, TM_NOW, 0.001);
+// rt_task_set_periodic(NULL, TM_NOW, 0.001);
 
     int i ;
 
@@ -462,7 +453,7 @@ rt_task_set_periodic(NULL, TM_NOW, 0.001);
 /* Utility to have mach speed, atmospheric pressure and temperature */
 void deduceInputs()
 {
-    rt_task_set_periodic(NULL, TM_NOW, 0.001);
+    // rt_task_set_periodic(NULL, TM_NOW, 0.001);
   	Rgas = 1718. ;                /* ft2/sec2 R */
 
     alt = altd ;
@@ -501,9 +492,7 @@ void deduceInputs()
 /* Utility to have Thermodynamic parameters */
 void getThermo()
 {
-    rt_task_set_periodic(NULL, TM_NOW, 0.001);
-    gam = (float *)calloc(20,sizeof(float));
-    cp = (float *)calloc(20,sizeof(float));
+    // rt_task_set_periodic(NULL, TM_NOW, 0.001);
     float m5;
     float delhc,delhht,delhf,delhlt;
     float deltc,deltht,deltf,deltlt;
@@ -646,7 +635,7 @@ void getThermo()
 /* Utility to determine engine performance */
 void calcPerf()
 {
-rt_task_set_periodic(NULL, TM_NOW, 0.001);
+// rt_task_set_periodic(NULL, TM_NOW, 0.001);
 float fac1, game, cpe, cp3;
 
   cp3 = getCp(tt[3]);                  //BTU/lbm R
@@ -738,7 +727,7 @@ float fac1, game, cpe, cp3;
 /* Utility to determine geometric variables */
 void getGeo ()
 {
-rt_task_set_periodic(NULL, TM_NOW, 0.001);
+// rt_task_set_periodic(NULL, TM_NOW, 0.001);
   if (afan < acore) afan = acore ;
 
   // limits compressor face
@@ -791,7 +780,7 @@ rt_task_set_periodic(NULL, TM_NOW, 0.001);
 // *********** Math utilities ***********
 float sqroot(float number)
 {
-rt_task_set_periodic(NULL, TM_NOW, 0.001);
+// rt_task_set_periodic(NULL, TM_NOW, 0.001);
 	float x0, x, prec=1;
 	if(number < 0)
 	{
@@ -818,7 +807,7 @@ float xfabs(float x)
 
 float xlog(float x)
 {
-rt_task_set_periodic(NULL, TM_NOW, 0.001);
+// rt_task_set_periodic(NULL, TM_NOW, 0.001);
 
 float number = 0;
 float coeff = -1;
@@ -833,11 +822,11 @@ int i = 1;
 	return 0;
 
 	if (x>1)
-	return -log(1/x);
+	return -xlog(1/x);
 
 	// 0<x<1
 	// log : x - x^2/2 + x^3/3 - x^4/4...
-	while(fabs(coeff)>PRECISION)
+	while(xfabs(coeff)>PRECISION)
 	{
 		coeff *= 1-x;
 		number += coeff/i;
@@ -849,7 +838,7 @@ return number;
 
 float expo(float x)
 {
-rt_task_set_periodic(NULL, TM_NOW, 0.001);
+// rt_task_set_periodic(NULL, TM_NOW, 0.001);
 
 float number = 1;
 float coeff = 1;
@@ -859,7 +848,7 @@ int i = 1;
 	return expo(709.78); // Infinite value
 
 	// exp : x^0/0! + x^1/1! + x^2/2! + x^3/3!
-	while(fabs(coeff)>PRECISION)
+	while(xfabs(coeff)>PRECISION)
 	{
 		coeff *= x/i;
 		number += coeff;
@@ -889,7 +878,7 @@ int partieEntiere = y;
 	// factorize y into integer and decimal parts
 	// For example : 12.345^67.890123 = (12.345^67) * (12.345^0.890123)
 	// integer part : pow(float, int) and the decimal par : x^y = exp(y*ln(x))
-return power(x, partieEntiere) * expo((y-partieEntiere)*log(x));
+return power(x, partieEntiere) * expo((y-partieEntiere)*xlog(x));
 }
 
 float power(float x, int y)

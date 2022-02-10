@@ -18,9 +18,9 @@ int rt_printf(const char *format, ...);
 
 float getGama(float temp);
 float getCp(float temp);
-float getMach();
-float getAir();
-float getRayleighLoss();
+float getMach(int sub, float corair, float gama1);
+float getAir(float mach, float gama2);
+float getRayleighLoss(float mach1, float ttrat, float tlow);
 void defaultParam();
 void deduceInputs();
 void getThermo();
@@ -36,7 +36,7 @@ float power(float x, int y);
 
 void create_tasks();
 void cleanup();
-int xeno_main();
+int xeno_main(int engine);
 
 static int engine;
 
