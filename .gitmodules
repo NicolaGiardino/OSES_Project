@@ -7,6 +7,3 @@
 [submodule "libraries/picoprobe"]
 	path = libraries/picoprobe
 	url = https://github.com/raspberrypi/picoprobe.git
-[submodule "libraries/pico-sdk"]
-	path = libraries/pico-sdk
-	url = https://github.com/raspberrypi/pico-sdk
