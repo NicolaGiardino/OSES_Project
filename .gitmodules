@@ -4,3 +4,6 @@
 [submodule "libraries/pico-examples"]
 	path = libraries/pico-examples
 	url = https://github.com/raspberrypi/pico-examples
+[submodule "libraries/picoprobe"]
+	path = libraries/picoprobe
+	url = https://github.com/raspberrypi/picoprobe.git
