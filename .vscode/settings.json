@@ -3,6 +3,8 @@
         "sd_card.h": "c",
         "stdlib.h": "c",
         "binary_info.h": "c",
-        "spi.h": "c"
+        "spi.h": "c",
+        "rtdevice.h": "c",
+        "rtthread.h": "c"
     }
 }
