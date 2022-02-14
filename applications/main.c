@@ -12,6 +12,10 @@
 #include <rtdevice.h>
 #include "pico/stdlib.h"
 #include "pico/binary_info.h"
+#include "../libraries/no-OS-FatFS-SD-SPI-RPi-Pico/FatFs_SPI/include/f_util.h"
+#include "../libraries/no-OS-FatFS-SD-SPI-RPi-Pico/FatFs_SPI/ff14a/source/ff.h"
+#include "../libraries/no-OS-FatFS-SD-SPI-RPi-Pico/FatFs_SPI/include/rtc.h"
+#include "../libraries/no-OS-FatFS-SD-SPI-RPi-Pico/FatFs_SPI/sd_driver/hw_config.h"
 
 #define LED_PIN 25
 
@@ -112,8 +116,9 @@ int main(void)
 
     rt_pin_mode(LED_PIN, PIN_MODE_OUTPUT);
 
-    stdio_init_all();
-    printf("Hello, MPU6050! Reading raw data from registers...\n");
+    time_init();
+
+    rt_kprintf("Hello, MPU6050! Reading raw data from registers...\n");
 
     i2c_device = rt_i2c_bus_device_find("i2c0");
     if(i2c_device == RT_NULL)
@@ -134,18 +139,51 @@ int main(void)
 
     int16_t acceleration[3], gyro[3], temp;
 
+    sd_card_t *pSD = sd_get_by_num(0);
+    FRESULT fr = f_mount(&pSD->fatfs, pSD->pcName, 1);
+    if (FR_OK != fr)
+        rt_kprintf("f_mount error: %s (%d)\n", FRESULT_str(fr), fr);
+    FIL fil;
+    const char *const filename = "filename.txt";
+    fr = f_open(&fil, filename, FA_OPEN_APPEND | FA_WRITE);
+    if (FR_OK != fr && FR_EXIST != fr)
+        rt_kprintf("f_open(%s) error: %s (%d)\n", filename, FRESULT_str(fr), fr);
+    if (f_printf(&fil, "Hello, world!\n") < 0)
+    {
+        rt_kprintf("f_printf failed\n");
+    }
+
     while (1) {
         mpu6050_read_raw(acceleration, gyro, &temp);
 
         // These are the raw numbers from the chip, so will need tweaking to be really useful.
         // See the datasheet for more information
         rt_kprintf("Acc. X = %d, Y = %d, Z = %d\n", acceleration[0], acceleration[1], acceleration[2]);
+        if (f_printf(&fil, "Acc. X = %d, Y = %d, Z = %d\n", acceleration[0], acceleration[1], acceleration[2]) < 0)
+        {
+            rt_kprintf("f_printf failed\n");
+        }
         rt_kprintf("Gyro. X = %d, Y = %d, Z = %d\n", gyro[0], gyro[1], gyro[2]);
+        if (f_printf(&fil, "Gyro. X = %d, Y = %d, Z = %d\n", gyro[0], gyro[1], gyro[2]) < 0)
+        {
+            rt_kprintf("f_printf failed\n");
+        }
         // Temperature is simple so use the datasheet calculation to get deg C.
         // Note this is chip temperature.
         rt_kprintf("Temp. = %f\n", (temp / 340.0) + 36.53);
+        if (f_printf(&fil, "Temp. = %f\n", (temp / 340.0) + 36.53) < 0)
+        {
+            rt_kprintf("f_printf failed\n");
+        }
 
         rt_thread_mdelay(100);
     }
+
+    fr = f_close(&fil);
+    if (FR_OK != fr)
+    {
+        rt_kprintf("f_close error: %s (%d)\n", FRESULT_str(fr), fr);
+    }
+    f_unmount(pSD->pcName);
 }
 

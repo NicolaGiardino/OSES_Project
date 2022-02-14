@@ -1,39 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>OSES_Project</name>
-	<comment></comment>
-	<projects>
+  <name>OSES_Project</name>
+  <comment />
+  <projects>
 	</projects>
-	<buildSpec>
-		<buildCommand>
-			<name>org.eclipse.cdt.managedbuilder.core.genmakebuilder</name>
-			<triggers>clean,full,incremental,</triggers>
-			<arguments>
+  <buildSpec>
+    <buildCommand>
+      <name>org.eclipse.cdt.managedbuilder.core.genmakebuilder</name>
+      <triggers>clean,full,incremental,</triggers>
+      <arguments>
 			</arguments>
-		</buildCommand>
-		<buildCommand>
-			<name>org.eclipse.cdt.managedbuilder.core.ScannerConfigBuilder</name>
-			<triggers>full,incremental,</triggers>
-			<arguments>
+    </buildCommand>
+    <buildCommand>
+      <name>org.eclipse.cdt.managedbuilder.core.ScannerConfigBuilder</name>
+      <triggers>full,incremental,</triggers>
+      <arguments>
 			</arguments>
-		</buildCommand>
-	</buildSpec>
-	<natures>
-		<nature>org.eclipse.cdt.core.cnature</nature>
-		<nature>org.rt-thread.studio.rttnature</nature>
-		<nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
-		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
-	</natures>
-	<linkedResources>
-		<link>
-			<name>libraries/pico-examples</name>
-			<type>2</type>
-			<location>C:/Users/nicol/Desktop/PoliTo/OSES/OSES_Project/libraries/pico-examples</location>
-		</link>
-		<link>
-			<name>libraries/pico-extras</name>
-			<type>2</type>
-			<location>C:/Users/nicol/Desktop/PoliTo/OSES/OSES_Project/libraries/pico-extras</location>
-		</link>
-	</linkedResources>
+    </buildCommand>
+  </buildSpec>
+  <natures>
+    <nature>org.eclipse.cdt.core.cnature</nature>
+    <nature>org.rt-thread.studio.rttnature</nature>
+    <nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
+    <nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
+  </natures>
+  <linkedResources>
+    <link>
+      <name>libraries/pico-examples</name>
+      <type>2</type>
+      <location>C:/Users/nicol/Desktop/PoliTo/OSES/OSES_Project/libraries/pico-examples</location>
+    </link>
+    <link>
+      <name>libraries/pico-extras</name>
+      <type>2</type>
+      <location>C:/Users/nicol/Desktop/PoliTo/OSES/OSES_Project/libraries/pico-extras</location>
+    </link>
+  </linkedResources>
 </projectDescription>
