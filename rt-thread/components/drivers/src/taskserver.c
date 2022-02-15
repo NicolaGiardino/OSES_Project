@@ -32,7 +32,7 @@ void rt_timer_deferrable_period(void *param)
     if (rt_list_isempty(deferrable_server.asyncTask.next))
         rt_thread_resume(&deferrable_server.deferrable);
 
-    rt_thread_control(&deferrable_server.deferrable, RT_THREAD_CTRL_CHANGE_PRIORITY, deferrable_server.priority);
+    rt_thread_control(&deferrable_server.deferrable, RT_THREAD_CTRL_CHANGE_PRIORITY, &deferrable_server.priority);
 
     rt_timer_control(&deferrable_server.tim_capacity, RT_TIMER_CTRL_SET_TIME, &deferrable_server.capacity_left);
 }

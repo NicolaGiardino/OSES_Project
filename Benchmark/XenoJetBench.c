@@ -1,7 +1,7 @@
 #include"XenoJetBench.h"
 #include"time.h"
 
-// TODO: resolve references to OpenMP library and implement alternative to rt_task_wait_period(NULL);
+// TODO: resolve references to OpenMP library and conflict between rt_thread_control() and RT_THREAD_PRIORITY_MAX
 
 #define HIGHEST RT_THREAD_PRIORITY_MAX - 10 /* highest priority */
 #define HIGH RT_THREAD_PRIORITY_MAX - 9 /* high priority */
@@ -254,16 +254,6 @@ rt_kprintf("\n==> Ending XenoJetBench Execution \n\n");
 	rt_kprintf("    Number of threads : %d\n", NUM_THREADS);
 	rt_kprintf("    Number of points : %d\n\n",NumPoints);
 
-	free(trat);
-	free(tt);
-	free(prat);
-	free(pt);
-	free(eta);
-	free(gam);
-	free(cp);
-	free(StartPiTime);
-	free(EndPiTime);
-	free(PiTime);
 
         cleanup();
 
@@ -794,7 +784,8 @@ float sqroot(float number)
 		x0=x;
 		x=0.5*(x0+number/x0);
 		prec=(x-x0)/x0;
-	        rt_task_wait_period(NULL);
+	        //rt_task_wait_period(NULL);
+	    rt_thread_yield();
         }
 return(x);
 }
@@ -831,7 +822,8 @@ int i = 1;
 		coeff *= 1-x;
 		number += coeff/i;
 		i++;
-	        rt_task_wait_period(NULL);
+	        //rt_task_wait_period(NULL);
+		rt_thread_yield();
         }
 return number;
 }
@@ -853,7 +845,8 @@ int i = 1;
 		coeff *= x/i;
 		number += coeff;
 		i++;
-	        rt_task_wait_period(NULL);
+	        //rt_task_wait_period(NULL);
+		rt_thread_yield();
         }
 
 return number;
