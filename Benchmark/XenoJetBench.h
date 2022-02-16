@@ -1,3 +1,5 @@
+#ifndef __XENOJETBENCH_H__
+#define __XENOJETBENCH_H__
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -8,9 +10,6 @@
 static long num_steps = 1000000;
 
 #define PRECISION 0.0001
-
-#ifndef __XENOJETBENCH_H__
-#define __XENOJETBENCH_H__
 
 int main();
 

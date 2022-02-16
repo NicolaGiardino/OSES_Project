@@ -12,7 +12,7 @@
 #include <rtdevice.h>
 #include "pico/stdlib.h"
 #include "pico/binary_info.h"
-#include "../Benchmark/XenoJetBench.c"
+#include "../Benchmark/XenoJetBench.h"
 
 #define LED_PIN 25
 

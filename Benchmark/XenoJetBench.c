@@ -87,7 +87,7 @@ int xeno_main(int engine)
 
 	create_tasks();
 
-	// omp_set_num_threads(NUM_THREADS);
+	omp_set_num_threads(NUM_THREADS);
 
 	rt_kprintf("Choose your engine :\n");
 	rt_kprintf("   1:Turbojet\n");
