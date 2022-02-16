@@ -9,3 +9,4 @@ Changes:
 | Nicola di Gruttola Giardino | Feb 10 '22 | Commit 3 | Tested LED and Pushbutton, implemented reading accelerometer (To test) |
 | Fulvio Castello | Feb 10 '22 | Commit 4 | Heavily modifies several methods inside benchmark and added TODO list (for future reference) |
 | Fulvio Castello | Feb 15 '22 | Commit 5 | Resolved issue regarding Xenomai wait for next periodic release by using a similar RT-Thread function & fixed implicit pointer to integer conversion inside deferrable server source code. |
+| Nicola di Gruttola Giardino | Feb 16 '22 | Commit 6 | Changed functions of periodic tasks into the equivalent for RT-Thread - Implemented time elapsed functions |

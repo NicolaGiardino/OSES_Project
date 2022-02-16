@@ -1,20 +1,18 @@
-#include<stdio.h>
-#include<stdlib.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-//Define the number of threads
+// Define the number of threads
 #define NUM_THREADS 2
 
-//pi calculation
-static long num_steps = 1000000; 
+// pi calculation
+static long num_steps = 1000000;
 
 #define PRECISION 0.0001
 
 #ifndef __XENOJETBENCH_H__
 #define __XENOJETBENCH_H__
 
-
 int main();
-int rt_printf(const char *format, ...);
 
 float getGama(float temp);
 float getCp(float temp);
@@ -26,7 +24,7 @@ void deduceInputs();
 void getThermo();
 void calcPerf();
 void getGeo();
-float deg2rad(float deg,float pi);
+float deg2rad(float deg, float pi);
 float sqroot(float numb1er);
 float xfabs(float x);
 float xlog(float x);
@@ -40,11 +38,11 @@ int xeno_main(int engine);
 
 static int engine;
 
-static float g0,g0d,gama,tref,abflag;
-static float tt4,tt4d,tt7,tt7d,p3p2d,p3fp2d,byprat,throtl;
-static float altd,u0d,fhvd,fhv;
+static float g0, g0d, gama, tref, abflag;
+static float tt4, tt4d, tt7, tt7d, p3p2d, p3fp2d, byprat, throtl;
+static float altd, u0d, fhvd, fhv;
 
-//arrays
+// arrays
 static float trat[20];
 static float tt[20];
 static float prat[20];
@@ -53,23 +51,22 @@ static float eta[20];
 static float gam[20];
 static float cp[20];
 
-static float u0min,u0max,altmin,altmax,thrmin,thrmax;
-static float etmin,etmax,cprmin,cprmax,bypmin,bypmax;
-static float fprmin,fprmax,t4min,t4max,t7min,t7max,pmax,tmin,tmax;
+static float u0min, u0max, altmin, altmax, thrmin, thrmax;
+static float etmin, etmax, cprmin, cprmax, bypmin, bypmax;
+static float fprmin, fprmax, t4min, t4max, t7min, t7max, pmax, tmin, tmax;
 
 static float weight;
-static float Rgas,alt,ts0,ps0,a0,u0,fsmach,q0,rho0,cpair,tsout,psout;
+static float Rgas, alt, ts0, ps0, a0, u0, fsmach, q0, rho0, cpair, tsout, psout;
 
-static float a8,a8d,a4,acore,m2,afan,mfr,isp;
-static float epr,etr,npr,snpr;
-static float fnet,fgros,dram,sfc,fa,eair,uexit,ues;
-static float fnlb,fglb,drlb,flflo;
-static float pexit,pfexit;
+static float a8, a8d, a4, acore, m2, afan, mfr, isp;
+static float epr, etr, npr, snpr;
+static float fnet, fgros, dram, sfc, fa, eair, uexit, ues;
+static float fnlb, fglb, drlb, flflo;
+static float pexit, pfexit;
 
-static float a8max,a8rat,arsched,a4p,acap,a2;
+static float a8max, a8rat, arsched, a4p, acap, a2;
 
-static float dcomp,lcomp,dburner,lburn,dturbin,lturb,dnozl,lnoz,dfan,ncomp,nturb;
-static float sblade,hblade,tblade,xcomp,ncompd;
-
+static float dcomp, lcomp, dburner, lburn, dturbin, lturb, dnozl, lnoz, dfan, ncomp, nturb;
+static float sblade, hblade, tblade, xcomp, ncompd;
 
 #endif /* __XENOJETBENCH_H__ */

@@ -18,9 +18,10 @@
 
 static int addr = 0x68;
 
-struct rt_i2c_bus_device * i2c_device;
+struct rt_i2c_bus_device *i2c_device;
 
-static void mpu6050_reset() {
+static void mpu6050_reset()
+{
     // Two byte reset. First byte register, second byte data
     // There are a load more options to set up the device in different ways that could be added here
     struct rt_i2c_msg msgs;
@@ -29,13 +30,14 @@ static void mpu6050_reset() {
     msgs.addr = addr;
     msgs.len = 2;
     msgs.flags = RT_I2C_WR;
-    if( rt_i2c_transfer(i2c_device, &msgs, 1) != 1 )
+    if (rt_i2c_transfer(i2c_device, &msgs, 1) != 1)
     {
         rt_kprintf("write fail!");
     }
 }
 
-static void mpu6050_read_raw(int16_t accel[3], int16_t gyro[3], int16_t *temp) {
+static void mpu6050_read_raw(int16_t accel[3], int16_t gyro[3], int16_t *temp)
+{
     // For this particular device, we send the device the register we want to read
     // first, then subsequently read from the device. The register is auto incrementing
     // so we don't need to keep sending the register we want, just the first.
@@ -48,19 +50,20 @@ static void mpu6050_read_raw(int16_t accel[3], int16_t gyro[3], int16_t *temp) {
     msgs.addr = addr;
     msgs.len = 1;
     msgs.flags = RT_I2C_WR;
-    if( rt_i2c_transfer(i2c_device, &msgs, 1) != 1 )
+    if (rt_i2c_transfer(i2c_device, &msgs, 1) != 1)
     {
         rt_kprintf("write fail!");
     }
     msgs.addr = addr;
     msgs.len = 6;
     msgs.flags = RT_I2C_RD;
-    if( rt_i2c_transfer(i2c_device, &msgs, 1) != 1 )
+    if (rt_i2c_transfer(i2c_device, &msgs, 1) != 1)
     {
         rt_kprintf("read fail!");
     }
 
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 3; i++)
+    {
         accel[i] = (buffer[i * 2] << 8 | buffer[(i * 2) + 1]);
     }
 
@@ -70,20 +73,22 @@ static void mpu6050_read_raw(int16_t accel[3], int16_t gyro[3], int16_t *temp) {
     msgs.addr = addr;
     msgs.len = 1;
     msgs.flags = RT_I2C_WR;
-    if( rt_i2c_transfer(i2c_device, &msgs, 1) != 1 )
+    if (rt_i2c_transfer(i2c_device, &msgs, 1) != 1)
     {
         rt_kprintf("write fail!");
     }
     msgs.addr = addr;
     msgs.len = 6;
     msgs.flags = RT_I2C_RD;
-    if( rt_i2c_transfer(i2c_device, &msgs, 1) != 1 )
+    if (rt_i2c_transfer(i2c_device, &msgs, 1) != 1)
     {
         rt_kprintf("read fail!");
     }
 
-    for (int i = 0; i < 3; i++) {
-        gyro[i] = (buffer[i * 2] << 8 | buffer[(i * 2) + 1]);;
+    for (int i = 0; i < 3; i++)
+    {
+        gyro[i] = (buffer[i * 2] << 8 | buffer[(i * 2) + 1]);
+        ;
     }
 
     // Now temperature from reg 0x41 for 2 bytes
@@ -92,14 +97,14 @@ static void mpu6050_read_raw(int16_t accel[3], int16_t gyro[3], int16_t *temp) {
     msgs.addr = addr;
     msgs.len = 1;
     msgs.flags = RT_I2C_WR;
-    if( rt_i2c_transfer(i2c_device, &msgs, 1) != 1 )
+    if (rt_i2c_transfer(i2c_device, &msgs, 1) != 1)
     {
         rt_kprintf("write fail!");
     }
     msgs.addr = addr;
     msgs.len = 2;
     msgs.flags = RT_I2C_RD;
-    if( rt_i2c_transfer(i2c_device, &msgs, 1) != 1 )
+    if (rt_i2c_transfer(i2c_device, &msgs, 1) != 1)
     {
         rt_kprintf("read fail!");
     }
@@ -118,7 +123,7 @@ int main(void)
     printf("Hello, MPU6050! Reading raw data from registers...\n");
 
     i2c_device = rt_i2c_bus_device_find("i2c0");
-    if(i2c_device == RT_NULL)
+    if (i2c_device == RT_NULL)
     {
         rt_kprintf("i2c bus device %s not found! ", "i2c0");
         return -RT_ENOSYS;
@@ -136,7 +141,8 @@ int main(void)
 
     int16_t acceleration[3], gyro[3], temp;
 
-    while (1) {
+    while (1)
+    {
         mpu6050_read_raw(acceleration, gyro, &temp);
 
         // These are the raw numbers from the chip, so will need tweaking to be really useful.
@@ -150,4 +156,3 @@ int main(void)
         rt_thread_mdelay(100);
     }
 }
-
