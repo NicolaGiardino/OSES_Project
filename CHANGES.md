@@ -11,3 +11,4 @@ Changes:
 | Fulvio Castello | Feb 15 '22 | Commit 5 | Resolved issue regarding Xenomai wait for next periodic release by using a similar RT-Thread function & fixed implicit pointer to integer conversion inside deferrable server source code |
 | Nicola di Gruttola Giardino | Feb 16 '22 | Commit 6 | Changed functions of periodic tasks into the equivalent for RT-Thread - Implemented time elapsed functions |
 | Fulvio castello | Feb 16 '22 | Commit 7 | Made linking XenoJetBench.h possible thanks to improved SCons implementation - work on OpenMP library still needed to compile correctly |
+| Fulvio Castello | Feb 17 '22 | Commit 8 | Apparently eliminated parallel threads support (needs testing for definitive commented code removal); adjusted a lot of console outputs formatting and timing variables types; fixed warning inside deferrable server source code & improved engine selection via a switch statement |
