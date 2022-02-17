@@ -1,9 +1,6 @@
 #include "XenoJetBench.h"
-#include "time.h"
 #include <rtthread.h>
 #include <rtdevice.h>
-
-// TODO: resolve references to OpenMP library and conflict between rt_thread_control() and RT_THREAD_PRIORITY_MAX
 
 #define HIGHEST RT_THREAD_PRIORITY_MAX - 10 /* highest priority */
 #define HIGH RT_THREAD_PRIORITY_MAX - 9		/* high priority */
@@ -68,26 +65,27 @@ void cleanup()
 	rt_thread_delete(&thd_getgeo);
 	rt_thread_delete(&thd_calcperf);
 }
+
 /* The engine number will be chosen by using 3 pushbuttons */
 int xeno_main(int engine)
 {
-	time_t BM_Start = rt_tick_get_millisecond(), BM_End;
-	rt_kprintf("XenoJetBench: An Open Source Hard-Real-Time Multiprocessor Benchmark \n\n");
+	uint32_t BM_Start = rt_tick_get_millisecond(), BM_End, TotalTime = 0, StartTime, EndTime, ExecTime;//, ExecTotTime;
+	rt_kprintf("XenoJetBench: An Open Source Hard-Real-Time Multiprocessor Benchmark\n\n");
 	int i = 0;
 	FILE *file;
 	float a, b, c, d;
-	int NumPoints = 0, NumMissed = 0;
+	int NumPoints = 0;//, NumMissed = 0;
 	float x, pi, sum;
 	float step = 1.0 / (float)num_steps;
-	int tid1, tid2, tid3;
-	float StartPiTime[16], EndPiTime[16], PiTime[16];
-	float used, usedTime, TotalUsed;
-	time_t TotalTime = 0, StartTime, EndTime, ExecTime, ExecTotTime;
-	float TimePoint, TotalTimePoint = 0;
+	//int tid1, tid2, tid3;
+	//float StartPiTime[16], EndPiTime[16], PiTime[16];
+	//float used, usedTime, TotalUsed;
+	float TimePoint;//, TotalTimePoint = 0;
 
 	create_tasks();
 
-	omp_set_num_threads(NUM_THREADS);
+	// omp_set_num_threads(NUM_THREADS); -> useless for us:
+	// our program will run on a single-core environment without thread parallelization
 
 	rt_kprintf("Choose your engine :\n");
 	rt_kprintf("   1:Turbojet\n");
@@ -97,61 +95,56 @@ int xeno_main(int engine)
 	// define paramaters
 	defaultParam();
 
-	if (engine == 1)
-	{
-
-		rt_kprintf("engine %d : Turbojet is selected\n\n", engine);
-	}
-	else if (engine == 2)
-	{
-		rt_kprintf("engine %d : Afterburner is selected\n\n", engine);
-	}
-	else if (engine == 3)
-	{
-		rt_kprintf("Engine %d : Turbofan is selected\n\n", engine);
-	}
-	else
-	{
-		rt_kprintf("Wrong engine choice [Select from 1,2 or 3] \n");
-		return (0);
-	}
+	switch (engine) {
+        case 1:
+            rt_kprintf("Engine %d : Turbojet is selected\n\n", engine);
+            break;
+        case 2:
+            rt_kprintf("Engine %d : Afterburner is selected\n\n", engine);
+            break;
+        case 3:
+            rt_kprintf("Engine %d : Turbofan is selected\n\n", engine);
+            break;
+        default:
+            rt_kprintf("Wrong engine choice [Select from 1, 2 or 3]\n");
+            return(EXIT_FAILURE);
+            break;
+    }
 
 	rt_kprintf(" ==> Starting XenoJetBench Execution \n\n");
 	// header for results
-	rt_kprintf("T,ExecTime,  Spd| Alt |  Thr| Mach|Press| Temp| Fnet|Fgros|RamDr|FlFlo|TSFC|Airfl|Weight|Fn/W\n");
+	rt_kprintf("T, ExecTime, Spd|Alt|Thr|Mach|Press|Temp|Fnet|Fgros|RamDr|FlFlo|TSFC|Airfl|Weight|Fn/W\n");
 
 	// open the Inputs file
 	file = fopen("input.txt", "r");
 
-#pragma omp parallel private(i) shared(u0d, altd, throtl)
-	{
+// all the following parallel/reduction/single pragma clauses can be trivially
+// deleted in order for the code to be executed as a "one-thread-only area"
 
+/* MIND THE CURLY BRACKETS, THOUGH! */
+
+// #pragma omp parallel private(i) shared(u0d, altd, throtl)
+//	{
 		// read line by line
 		while (!feof(file))
 		{
-
-			tid1 = omp_get_thread_num();
+			//tid1 = omp_get_thread_num();
 			// Pi calculation
-			StartPiTime[tid1] = omp_get_wtime();
+			//StartPiTime[tid1] = omp_get_wtime();
 
-#pragma omp parallel reduction(+ \
-							   : sum) private(x, i)
-			{
+// #pragma omp parallel reduction(+ \ : sum) private(x, i)
+//			{
 				for (i = 0; i < num_steps; i++)
 				{
 					x = (i + 0.5) * step;
 					sum += 4.0 / (1.0 + x * x);
 				}
 
-#pragma omp single
-				{
-					pi = sum * step;
-				}
-			}
-
-			tid2 = omp_get_thread_num();
-			EndPiTime[tid2] = omp_get_wtime();
-			PiTime[tid2] = EndPiTime[tid2] - StartPiTime[tid2];
+// #pragma omp single { pi = sum * step; } }
+			pi = sum * step;
+			//tid2 = omp_get_thread_num();
+			//EndPiTime[tid2] = omp_get_wtime();
+			//PiTime[tid2] = EndPiTime[tid2] - StartPiTime[tid2];
 
 			// Read a line, Speed Altitude and Throttle
 			fscanf(file, "%lf%lf%lf%lf", &a, &b, &c, &d);
@@ -195,74 +188,66 @@ int xeno_main(int engine)
 					// Input time point
 					TimePoint = d;
 
-				TotalTimePoint += TimePoint;
-			}
+				//TotalTimePoint += TimePoint;
+//			}
 			//********* START CALCULATIONS **********
 
-#pragma omp parallel private(i) shared(u0d, altd, throtl)
-			{
-
-				StartTime = time(NULL);
-
+// #pragma omp parallel private(i) shared(u0d, altd, throtl)
+//			{
+				StartTime = rt_tick_get_millisecond();
 				start_tasks();
-
-				EndTime = time(NULL);
-				ExecTime = (EndTime - StartTime) / 1000000000;
+				EndTime = rt_tick_get_millisecond();
+				ExecTime = (EndTime - StartTime) / 1000;
 
 				// Get the thread number
-				tid3 = omp_get_thread_num();
+				//tid3 = omp_get_thread_num();
 
 				// deadline time
-				used = (ExecTime + PiTime[tid3]) / TimePoint;
-				ExecTotTime = ExecTime + PiTime[tid3];
-				TotalTime += ExecTotTime;
-				usedTime = (ExecTime + PiTime[tid3]) - TimePoint;
-				TotalUsed += used;
+				//used = (ExecTime + PiTime[tid3]) / TimePoint;
+				//ExecTotTime = ExecTime + PiTime[tid3];
+				//TotalTime += ExecTotTime;
+				//usedTime = (ExecTime + PiTime[tid3]) - TimePoint;
+				//TotalUsed += used;
 
 				// Count the number of points
 				NumPoints++;
 
 				//*********** PRINT RESULTS ************
-				if (used > 1)
+				rt_kprintf("%7lf, %4.0lf|%5.0lf|%5.1lf|%5.3lf|%5.2lf|%5.1lf|%5.0lf|%5.0lf|%5.0lf|%5.0lf|%4.2lf|%5.1lf|%6.2lf|%4.2lf\n     @ point %d\n", ExecTime, u0d, altd, throtl, fsmach, psout, tsout, fnlb, fglb, drlb, flflo, sfc, eair, weight, fnlb / weight, NumPoints);
+				/*if (used > 1)
 				{
 					rt_kprintf("%d,%7lf, %4.0lf|%5.0lf|%5.1lf|%5.3lf|%5.2lf|%5.1lf|%5.0lf|%5.0lf|%5.0lf|%5.0lf|%4.2lf|%5.1lf|%6.2lf|%4.2lf\nDeadline missed : %3.1lf%% used for point %d\n", tid3, ExecTotTime, u0d, altd, throtl, fsmach, psout, tsout, fnlb, fglb, drlb, flflo, sfc, eair, weight, fnlb / weight, used * 100, NumPoints);
 					NumMissed++;
 					TotalTimePoint += usedTime;
 				}
-
 				else
 					rt_kprintf("%d,%7lf, %4.0lf|%5.0lf|%5.1lf|%5.3lf|%5.2lf|%5.1lf|%5.0lf|%5.0lf|%5.0lf|%5.0lf|%4.2lf|%5.1lf|%6.2lf|%4.2lf\n     %3.1lf%% used for point %d\n", tid3, ExecTotTime, u0d, altd, throtl, fsmach, psout, tsout, fnlb, fglb, drlb, flflo, sfc, eair, weight, fnlb / weight, used * 100, NumPoints);
-
+                */
 			} // End of if(!feof)
 		}	  // End of while(!feof)
-
 		rt_kprintf("\n==> Ending XenoJetBench Execution \n\n");
-
-	} // End of parallel area
+//	} // End of parallel area
 
 	// Close the file
 	fclose(file);
 	rt_kprintf("\n========================================================\n");
-
 	rt_kprintf("    XenoJetBench Successfully Terminated\n\n");
-	rt_kprintf("==> Results\n    Total execution time is : %lf with %d missed deadline\n", (TotalTime) / NUM_THREADS, NumMissed);
-	rt_kprintf("    Which represents %3.1lf%% of\n", TotalUsed * 100 / NumPoints);
-	rt_kprintf("    Real time used : %lf\n", TotalTimePoint / NUM_THREADS);
-	rt_kprintf("    Number of threads : %d\n", NUM_THREADS);
-	rt_kprintf("    Number of points : %d\n\n", NumPoints);
+	//rt_kprintf("==> Results\n    Total execution time is : %lf with %d missed deadline\n", TotalTime, NumMissed);
+	//rt_kprintf("    Which represents %3.1lf%% of\n", TotalUsed * 100 / NumPoints);
+	//rt_kprintf("    Real time used : %lf\n", TotalTimePoint);
+	//rt_kprintf("    Number of threads : %d\n", NUM_THREADS);
+	//rt_kprintf("    Number of points : %d\n\n", NumPoints);
 
 	cleanup();
 
-	rt_kprintf("    XenoJetBench Start time : %lf secs\n ", BM_Start * 1000);
+	rt_kprintf("    XenoJetBench Start time : %lf secs\n ", BM_Start / 1000);
 
 	BM_End = rt_tick_get_millisecond();
 
-	rt_kprintf("   XenoJetBench End time : %lf secs\n ", BM_End * 1000);
-	rt_kprintf("   Total Benchmark time : %lf secs\n\nPress ctrl+C to EXIT XenoJetBench \n ", (BM_End - BM_Start) * 1000);
-
+	rt_kprintf("   XenoJetBench End time : %lf secs\n", BM_End / 1000);
+	rt_kprintf("   Total Benchmark time : %lf secs\n", (BM_End - BM_Start) / 1000);
 	rt_kprintf("\n========================================================\n");
-
-	return (0);
+	return(EXIT_SUCCESS);
 }
 //***end of main***//
 
@@ -830,7 +815,7 @@ float sqroot(float number)
 	float x0, x, prec = 1;
 	if (number < 0)
 	{
-		printf("error sqroot\n");
+		printf("Error sqroot\n");
 		return (0);
 	}
 
@@ -840,7 +825,7 @@ float sqroot(float number)
 		x0 = x;
 		x = 0.5 * (x0 + number / x0);
 		prec = (x - x0) / x0;
-		// rt_task_wait_period(NULL);
+
 		rt_thread_delay(rt_tick_from_millisecond(1));;
 	}
 	return (x);
@@ -863,7 +848,7 @@ float xlog(float x)
 	int i = 1;
 	if (x <= 0)
 	{
-		printf("error log undefined\n");
+		printf("Error log undefined\n");
 		return 0;
 	}
 
@@ -880,7 +865,7 @@ float xlog(float x)
 		coeff *= 1 - x;
 		number += coeff / i;
 		i++;
-		// rt_task_wait_period(NULL);
+
 		rt_thread_delay(rt_tick_from_millisecond(1));;
 	}
 	return number;
@@ -903,7 +888,7 @@ float expo(float x)
 		coeff *= x / i;
 		number += coeff;
 		i++;
-		// rt_task_wait_period(NULL);
+
 		rt_thread_delay(rt_tick_from_millisecond(1));; /* Is this truly needed? */
 	}
 
@@ -917,7 +902,7 @@ float fpow(float x, float y)
 	// If x<0 and y not integer
 	if (x < 0 && (float)partieEntiere != y)
 	{
-		printf("error power undefined\n");
+		printf("Error power undefined\n");
 		return 0;
 	}
 

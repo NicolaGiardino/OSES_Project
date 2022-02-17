@@ -47,7 +47,7 @@ void rt_timer_deferrable_period(void *param)
 void rt_timer_deferrable_capacity(void *param)
 {
     deferrable_server.capacity_left = 0;
-    rt_thread_control(&deferrable_server.deferrable, RT_THREAD_CTRL_CHANGE_PRIORITY, RT_THREAD_PRIORITY_MAX - 1);
+    rt_thread_control(&deferrable_server.deferrable, RT_THREAD_CTRL_CHANGE_PRIORITY, (void *)(RT_THREAD_PRIORITY_MAX - 1));
 }
 
 /**

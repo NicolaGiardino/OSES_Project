@@ -4,7 +4,7 @@
 #include <stdlib.h>
 
 // Define the number of threads
-#define NUM_THREADS 2
+// #define NUM_THREADS 2
 
 // pi calculation
 static long num_steps = 1000000;
