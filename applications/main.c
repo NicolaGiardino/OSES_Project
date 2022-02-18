@@ -11,9 +11,7 @@
 #include <rtthread.h>
 #include <rtdevice.h>
 #include <board.h>
-#include "drv_soft_i2c.h"
-#include "drv_spi.h"
-#include "spi_flash_sfud.h"
+#include "MPU6050.h"
 
 /* defined the LED0 pin: PB7 */
 #define LED_PIN    GET_PIN(B, 14)
@@ -21,9 +19,6 @@
 #define W25Q_SPI_DEVICE_NAME "spi10"
 #define W25Q_SPI_BUS_NAME "spi1"
 
-static int addr = 0x68;
-
-struct rt_i2c_bus_device *i2c_device;
 struct rt_spi_device *spi_device;
 
 static int rt_hw_spi_flash_init(void)
