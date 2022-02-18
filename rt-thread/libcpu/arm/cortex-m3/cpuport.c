@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2021, RT-Thread Development Team
+ * Copyright (c) 2006-2018, RT-Thread Development Team
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -291,9 +291,7 @@ struct exception_info
  */
 void rt_hw_hard_fault_exception(struct exception_info * exception_info)
 {
-#if defined(RT_USING_FINSH) && defined(MSH_USING_BUILT_IN_COMMANDS)
     extern long list_thread(void);
-#endif
     struct stack_frame* context = &exception_info->stack_frame;
 
     if (rt_exception_hook != RT_NULL)
@@ -327,9 +325,9 @@ void rt_hw_hard_fault_exception(struct exception_info * exception_info)
     {
         rt_kprintf("hard fault on thread: %s\r\n\r\n", rt_thread_self()->name);
 
-#if defined(RT_USING_FINSH) && defined(MSH_USING_BUILT_IN_COMMANDS)
+#ifdef RT_USING_FINSH
         list_thread();
-#endif
+#endif /* RT_USING_FINSH */
     }
     else
     {

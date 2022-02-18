@@ -1,19 +1,18 @@
 /*
- * Copyright (c) 2006-2021, RT-Thread Development Team
+ * Copyright (c) 2006-2018, RT-Thread Development Team
  *
  * SPDX-License-Identifier: Apache-2.0
  *
  * Change Logs:
  * Date           Author       Notes
  */
-
-#include "cxx_mutex.h"
+#include "Mutex.h"
 
 using namespace rtthread;
 
 Mutex::Mutex(const char *name)
 {
-    rt_mutex_init(&mID, name, RT_IPC_FLAG_PRIO);
+    rt_mutex_init(&mID, name, RT_IPC_FLAG_FIFO);
 }
 
 bool Mutex::lock(int32_t millisec)

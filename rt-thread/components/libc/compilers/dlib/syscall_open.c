@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2021, RT-Thread Development Team
+ * Copyright (c) 2006-2018, RT-Thread Development Team
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -9,19 +9,18 @@
 */
 
 #include <rtthread.h>
-#include <LowLevelIOInterface.h>
-#include <fcntl.h>
-
-/*
- * The "__open" function opens the file named "filename" as specified
- * by "mode".
- */
+#include <yfuns.h>
+#ifdef RT_USING_DFS
+#include <dfs_posix.h>
+#endif
 
 #pragma module_name = "?__open"
 
 int __open(const char *filename, int mode)
 {
-#ifdef DFS_USING_POSIX
+#ifndef RT_USING_DFS
+  return _LLIO_ERROR;
+#else
   int handle;
   int open_mode = O_RDONLY;
 
@@ -71,7 +70,5 @@ int __open(const char *filename, int mode)
     return _LLIO_ERROR;
 
   return handle;
-#else
-  return _LLIO_ERROR;
-#endif /* DFS_USING_POSIX */
+#endif
 }

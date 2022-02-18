@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2021, RT-Thread Development Team
+ * Copyright (c) 2006-2018, RT-Thread Development Team
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -32,8 +32,8 @@ static void (*rt_mp_free_hook)(struct rt_mempool *mp, void *block);
 /**@{*/
 
 /**
- * @brief This function will set a hook function, which will be invoked when a memory
- *        block is allocated from the memory pool.
+ * This function will set a hook function, which will be invoked when a memory
+ * block is allocated from memory pool.
  *
  * @param hook the hook function
  */
@@ -43,8 +43,8 @@ void rt_mp_alloc_sethook(void (*hook)(struct rt_mempool *mp, void *block))
 }
 
 /**
- * @brief This function will set a hook function, which will be invoked when a memory
- *        block is released to the memory pool.
+ * This function will set a hook function, which will be invoked when a memory
+ * block is released to memory pool.
  *
  * @param hook the hook function
  */
@@ -54,7 +54,7 @@ void rt_mp_free_sethook(void (*hook)(struct rt_mempool *mp, void *block))
 }
 
 /**@}*/
-#endif /* RT_USING_HOOK */
+#endif
 
 /**
  * @addtogroup MM
@@ -63,18 +63,14 @@ void rt_mp_free_sethook(void (*hook)(struct rt_mempool *mp, void *block))
 /**@{*/
 
 /**
- * @brief  This function will initialize a memory pool object, normally which is used
- *         for static object.
+ * This function will initialize a memory pool object, normally which is used
+ * for static object.
  *
- * @param  mp is the memory pool object.
- *
- * @param  name is the name of the memory pool.
- *
- * @param  start is the start address of the memory pool.
- *
- * @param  size is the total size of the memory pool.
- *
- * @param  block_size is the size for each block..
+ * @param mp the memory pool object
+ * @param name the name of memory pool
+ * @param start the star address of memory pool
+ * @param size the total size of memory pool
+ * @param block_size the size for each block
  *
  * @return RT_EOK
  */
@@ -129,9 +125,9 @@ rt_err_t rt_mp_init(struct rt_mempool *mp,
 RTM_EXPORT(rt_mp_init);
 
 /**
- * @brief  This function will detach a memory pool from system object management.
+ * This function will detach a memory pool from system object management.
  *
- * @param  mp is the memory pool object.
+ * @param mp the memory pool object
  *
  * @return RT_EOK
  */
@@ -176,14 +172,12 @@ RTM_EXPORT(rt_mp_detach);
 
 #ifdef RT_USING_HEAP
 /**
- * @brief This function will create a mempool object and allocate the memory pool from
- *        heap.
+ * This function will create a mempool object and allocate the memory pool from
+ * heap.
  *
- * @param name is the name of memory pool.
- *
- * @param block_count is the count of blocks in memory pool.
- *
- * @param block_size is the size for each block.
+ * @param name the name of memory pool
+ * @param block_count the count of blocks in memory pool
+ * @param block_size the size for each block
  *
  * @return the created mempool object
  */
@@ -247,9 +241,9 @@ rt_mp_t rt_mp_create(const char *name,
 RTM_EXPORT(rt_mp_create);
 
 /**
- * @brief This function will delete a memory pool and release the object memory.
+ * This function will delete a memory pool and release the object memory.
  *
- * @param mp is the memory pool object.
+ * @param mp the memory pool object
  *
  * @return RT_EOK
  */
@@ -296,17 +290,15 @@ rt_err_t rt_mp_delete(rt_mp_t mp)
     return RT_EOK;
 }
 RTM_EXPORT(rt_mp_delete);
-#endif /* RT_USING_HEAP */
+#endif
 
 /**
- * @brief This function will allocate a block from memory pool.
+ * This function will allocate a block from memory pool
  *
- * @param mp is the memory pool object.
+ * @param mp the memory pool object
+ * @param time the waiting time
  *
- * @param time is the maximum waiting time for allocating memory.
- *             - 0 for not waiting, allocating memory immediately.
- *
- * @return the allocated memory block or RT_NULL on allocated failed.
+ * @return the allocated memory block or RT_NULL on allocated failed
  */
 void *rt_mp_alloc(rt_mp_t mp, rt_int32_t time)
 {
@@ -400,9 +392,9 @@ void *rt_mp_alloc(rt_mp_t mp, rt_int32_t time)
 RTM_EXPORT(rt_mp_alloc);
 
 /**
- * @brief This function will release a memory block.
+ * This function will release a memory block
  *
- * @param block the address of memory block to be released.
+ * @param block the address of memory block to be released
  */
 void rt_mp_free(void *block)
 {
@@ -459,4 +451,5 @@ RTM_EXPORT(rt_mp_free);
 
 /**@}*/
 
-#endif /* RT_USING_MEMPOOL */
+#endif
+

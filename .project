@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-  <name>OSES_Project</name>
+  <name>mcu743</name>
   <comment />
   <projects>
 	</projects>
@@ -24,16 +24,6 @@
     <nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
     <nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
   </natures>
-  <linkedResources>
-    <link>
-      <name>libraries/pico-examples</name>
-      <type>2</type>
-      <location>C:/Users/nicol/Desktop/PoliTo/OSES/OSES_Project/libraries/pico-examples</location>
-    </link>
-    <link>
-      <name>libraries/pico-extras</name>
-      <type>2</type>
-      <location>C:/Users/nicol/Desktop/PoliTo/OSES/OSES_Project/libraries/pico-extras</location>
-    </link>
-  </linkedResources>
+  <name>mcu743</name>
+  <linkedResources />
 </projectDescription>

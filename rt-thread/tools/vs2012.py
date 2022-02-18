@@ -44,12 +44,7 @@ fs_encoding = sys.getfilesystemencoding()
 filter_project = etree.Element('Project', attrib={'ToolsVersion':'4.0'})
 def get_uuid():
     id = uuid.uuid1()  # UUID('3e5526c0-2841-11e3-a376-20cf3048bcb3')
-    if sys.version > '3':
-        idstr = id.urn[9:] #'urn:uuid:3e5526c0-2841-11e3-a376-20cf3048bcb3'[9:]
-    else:
-        # python3 is no decode function
-        idstr = id.get_urn()[9:] #'urn:uuid:3e5526c0-2841-11e3-a376-20cf3048bcb3'[9:]
-    
+    idstr = id.get_urn()[9:] #'urn:uuid:3e5526c0-2841-11e3-a376-20cf3048bcb3'[9:]
     return '{'+idstr+'}'
 
 def VS2012_AddGroup(parent, group_name, files, project_path):
@@ -62,12 +57,7 @@ def VS2012_AddGroup(parent, group_name, files, project_path):
         path = os.path.join(path, name)
 
         ClCompile = SubElement(parent, 'ClCompile')
-
-        if sys.version > '3':
-            ClCompile.set('Include', path)
-        else:
-            # python3 is no decode function
-            ClCompile.set('Include', path.decode(fs_encoding))
+        ClCompile.set('Include', path.decode(fs_encoding))
 
         Filter = SubElement(ClCompile, 'Filter')
         Filter.text='Source Files\\'+group_name
@@ -129,13 +119,7 @@ def VS_add_ItemGroup(parent, file_type, files, project_path):
         path = os.path.join(path, name)
 
         File = SubElement(ItemGroup, item_tag)
-
-        if sys.version > '3':
-            File.set('Include', path)
-        else:
-            # python3 is no decode function
-            File.set('Include', path.decode(fs_encoding))
-
+        File.set('Include', path.decode(fs_encoding))
         if file_type == 'C' :
             ObjName = SubElement(File, 'ObjectFileName')
             ObjName.text = ''.join('$(IntDir)'+objpath+'\\')
@@ -153,22 +137,11 @@ def VS_add_HeadFiles(program, elem, project_path):
     for f in utils.source_list:
         path = _make_path_relative(project_path, f)
         File = SubElement(ItemGroup, 'ClInclude')
-
-        if sys.version > '3':
-            File.set('Include', path)
-        else:
-            # python3 is no decode function
-            File.set('Include', path.decode(fs_encoding))
+        File.set('Include', path.decode(fs_encoding))
 
         # add project.vcxproj.filter
         ClInclude = SubElement(filter_h_ItemGroup, 'ClInclude')
-
-        if sys.version > '3':
-            ClInclude.set('Include', path)
-        else:
-            # python3 is no decode function
-            ClInclude.set('Include', path.decode(fs_encoding))
-
+        ClInclude.set('Include', path.decode(fs_encoding))
         Filter = SubElement(ClInclude, 'Filter')
         Filter.text='Header Files'
 
@@ -178,12 +151,12 @@ def VS2012Project(target, script, program):
     tree = etree.parse('template_vs2012.vcxproj')
     root = tree.getroot()
     elem = root
-
-    out = open(target, 'w')
+    
+    out = file(target, 'wb')
     out.write('<?xml version="1.0" encoding="UTF-8"?>\r\n')
-
+    
     ProjectFiles = []
-
+    
     # add "*.c or *.h" files
 
     VS2012_CreateFilter(script, project_path)
@@ -214,16 +187,7 @@ def VS2012Project(target, script, program):
     # write cppdefinitons flags
     if 'CPPDEFINES' in building.Env:
         for elem in tree.iter(tag='PreprocessorDefinitions'):
-            CPPDEFINES = building.Env['CPPDEFINES']
-            definitions = []
-            if type(CPPDEFINES[0]) == type(()):
-                for item in CPPDEFINES:
-                    definitions += [i for i in item]
-                definitions = ';'.join(definitions)
-            else:
-                definitions = ';'.join(building.Env['CPPDEFINES'])
-
-            definitions = definitions + ';%(PreprocessorDefinitions)'
+            definitions = ';'.join(building.Env['CPPDEFINES']) + ';%(PreprocessorDefinitions)'
             elem.text = definitions
             break
     # write link flags
@@ -252,27 +216,15 @@ def VS2012Project(target, script, program):
             break
 
     xml_indent(root)
-
-    if sys.version > '3':
-        vcxproj_string = etree.tostring(root, encoding='unicode')
-    else:
-        # python3 is no decode function
-        vcxproj_string = etree.tostring(root, encoding='utf-8')
-
+    vcxproj_string = etree.tostring(root, encoding='utf-8')
     root_node=r'<Project DefaultTargets="Build" ToolsVersion="4.0">'
     out.write(r'<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">')
     out.write(vcxproj_string[len(root_node):])
     out.close()
 
     xml_indent(filter_project)
-
-    if sys.version > '3':
-        filter_string = etree.tostring(filter_project, encoding='unicode')
-    else:
-        # python3 is no decode function
-        filter_string = etree.tostring(filter_project, encoding='utf-8')
-
-    out = open('project.vcxproj.filters', 'w')
+    filter_string = etree.tostring(filter_project, encoding='utf-8')
+    out = file('project.vcxproj.filters', 'wb')
     out.write('<?xml version="1.0" encoding="UTF-8"?>\r\n')
     root_node=r'<Project ToolsVersion="4.0">'
     out.write(r'<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">')

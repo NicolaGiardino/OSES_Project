@@ -29,7 +29,7 @@
 #ifndef _SFUD_CFG_H_
 #define _SFUD_CFG_H_
 
-#include <rtthread.h>
+#include <rtconfig.h>
 
 /**
  * It will print more information on debug mode.
@@ -47,6 +47,7 @@
 
 #define DBG_TAG "SFUD"
 #include <rtdbg.h>
+extern void rt_kprintf(const char *fmt, ...);
 #define SFUD_INFO(...)        LOG_I(__VA_ARGS__)
 
 /**
