@@ -1,5 +1,7 @@
 #include "MPU6050.h"
 
+static int addr = 0x68;
+
 void mpu6050_init(char *dev_name)
 {
     i2c_device = rt_i2c_bus_device_find(dev_name);

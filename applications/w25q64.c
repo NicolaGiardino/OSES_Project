@@ -1,5 +1,15 @@
 #include "w25q64.h"
 
+
+static int rt_hw_spi_flash_init(void)
+{
+    rt_hw_spi_device_attach(W25Q_SPI_BUS_NAME, W25Q_SPI_DEVICE_NAME, GPIOA, GPIO_PIN_4);
+
+    return RT_EOK;
+}
+INIT_COMPONENT_EXPORT(rt_hw_spi_flash_init);
+
+
 int w25q64_init()
 {
 	spi_device = (struct rt_spi_device *)rt_device_find("spi10");
@@ -159,7 +169,7 @@ static void w25q64_erase()
 
 		rt_spi_transfer_message(spi_device, &msg1);
 
-	} while (buf[0] & 0x1);
+	} while (buf & 0x1);
 
 	/* Write disable */
 	instr = WRITE_DISABLE;
@@ -227,7 +237,7 @@ static void w25q64_erase_part(rt_uint8_t instr, rt_uint8_t addr[3])
 
 		rt_spi_transfer_message(spi_device, &msg1);
 
-	} while (buf[0] & 0x1);
+	} while (buf & 0x1);
 
 	/* Write disable */
 	instrc = WRITE_DISABLE;
@@ -329,7 +339,7 @@ static void w25q64_reset()
 {
 	/* Reset Enable */
 	rt_uint8_t instr;
-	struct rt_spi_message msg1, msg2;
+	struct rt_spi_message msg1;
 
 	instr = RESET_ENABLE;
 	msg1.send_buf = &instr;
@@ -357,7 +367,8 @@ void w25q64_control(rt_uint8_t instr, rt_uint8_t addr[3], rt_uint8_t dlen, rt_ui
 {
 	switch (instr)
 	{
-	case READ_SR1 || READ_SR2:
+	case READ_SR1:
+	case READ_SR2:
 		w25q64_getSR(instr, data);
 		break;
 	case WRITE_SR:
@@ -367,7 +378,9 @@ void w25q64_control(rt_uint8_t instr, rt_uint8_t addr[3], rt_uint8_t dlen, rt_ui
 		w25q64_write(addr, dlen, data);
 		break;
 
-	case SECTOR_ERASE || BLOCK_ERASE || DBLOCK_ERASE:
+	case SECTOR_ERASE:
+	case BLOCK_ERASE:
+	case DBLOCK_ERASE:
 		w25q64_erase_part(instr, addr);
 		break;
 

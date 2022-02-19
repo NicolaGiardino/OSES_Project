@@ -4,7 +4,7 @@
 #include <rtthread.h>
 #include <rtdevice.h>
 #include <board.h>
-#include "dev_spi.h"
+#include "drv_spi.h"
 
 #define W25Q_SPI_DEVICE_NAME "w25q64"
 #define W25Q_SPI_BUS_NAME "spi1"
@@ -25,14 +25,6 @@
 #define RESET           0x99
 
 struct rt_spi_device *spi_device;
-
-static int rt_hw_spi_flash_init(void)
-{
-    rt_hw_spi_device_attach(W25Q_SPI_BUS_NAME, W25Q_SPI_DEVICE_NAME, GPIOA, GPIO_PIN_4);
-
-    return RT_EOK;
-}
-INIT_COMPONENT_EXPORT(rt_hw_spi_flash_init);
 
 int w25q64_init();
 void w25q64_control(rt_uint8_t instr, rt_uint8_t addr[3], rt_uint8_t dlen, rt_uint8_t *data);
