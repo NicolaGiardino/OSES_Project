@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2021, RT-Thread Development Team
+ * Copyright (c) 2006-2018, RT-Thread Development Team
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -157,7 +157,7 @@ int dfs_file_ioctl(struct dfs_fd *fd, int cmd, void *args)
         return -EINVAL;
 
     /* regular file system fd */
-    if (fd->type == FT_REGULAR)
+    if (fd->type == FT_REGULAR || fd->type == FT_DEVICE)
     {
         switch (cmd)
         {
@@ -615,13 +615,11 @@ void cat(const char *filename)
         }
     }
     while (length > 0);
-    rt_kprintf("\n");
 
     dfs_file_close(&fd);
 }
 FINSH_FUNCTION_EXPORT(cat, print file);
 
-#ifdef DFS_USING_POSIX
 #define BUF_SZ  4096
 static void copyfile(const char *src, const char *dst)
 {
@@ -750,7 +748,6 @@ static const char *_get_path_lastname(const char *path)
     /* skip the '/' then return */
     return ++ptr;
 }
-
 void copy(const char *src, const char *dst)
 {
 #define FLAG_SRC_TYPE      0x03
@@ -843,8 +840,7 @@ void copy(const char *src, const char *dst)
     }
 }
 FINSH_FUNCTION_EXPORT(copy, copy file or dir)
-#endif /* DFS_USING_POSIX */
 
-#endif /* RT_USING_FINSH */
+#endif
 /* @} */
 

@@ -122,10 +122,10 @@ $(TARGET): $(OBJS)
 	@echo ar $(TARGET)
 	@$(CROSS_COMPILE)ar -rv $@ $(OBJS)
 else
-$(TARGET): $(OBJS)
+$(TARGET): $(OBJS) $(EXTERN_LIB)
 	@echo ------------------------------------------------
 	@echo link $(TARGET)
-	@$(CROSS_COMPILE)g++ -o $@ $(LFLAGS) $(OBJS) $(EXTERN_LIB)
+	@$(CROSS_COMPILE)g++ -o $@ $(LFLAGS) $(OBJS) $(EXTERN_LIB) -lc -lm
 	@echo ------------------------------------------------
 	@$(CROSS_COMPILE)objcopy -O binary $@ rtthread.bin
 	@$(CROSS_COMPILE)size $@

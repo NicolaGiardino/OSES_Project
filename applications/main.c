@@ -1,158 +1,171 @@
 /*
- * Copyright (c) 2006-2021, RT-Thread Development Team
+ * Copyright (c) 2006-2018, RT-Thread Development Team
  *
  * SPDX-License-Identifier: Apache-2.0
  *
  * Change Logs:
- * Date           Author         Notes
- * 2021-01-28     flybreak       first version
+ * Date           Author       Notes
+ * 2019-09-17     tyustli   first version
  */
 
 #include <rtthread.h>
 #include <rtdevice.h>
-#include "pico/stdlib.h"
-#include "pico/binary_info.h"
-#include "../Benchmark/XenoJetBench.h"
+#include <board.h>
+#include "MPU6050.h"
+#include "w25q64.h"
 
-#define LED_PIN 25
+/* defined the LED0 pin: PB7 */
+#define LED_PIN    GET_PIN(B, 14)
+#define PUSHBUTTON GET_PIN(C, 6)
 
-static int addr = 0x68;
+#define THREAD_PRIORITY     20
+#define THREAD_TIMESLICE    10
 
-struct rt_i2c_bus_device *i2c_device;
+rt_mutex_t mutex;
+static int16_t acc[3], gyro[3], temp;
 
-static void mpu6050_reset()
+static struct rt_thread producer;
+static char producer_stack[1024];
+static void producer_entry(void* parameter)
 {
-    // Two byte reset. First byte register, second byte data
-    // There are a load more options to set up the device in different ways that could be added here
-    struct rt_i2c_msg msgs;
-    msgs.buf[0] = 0x6B;
-    msgs.buf[1] = 0x00;
-    msgs.addr = addr;
-    msgs.len = 2;
-    msgs.flags = RT_I2C_WR;
-    if (rt_i2c_transfer(i2c_device, &msgs, 1) != 1)
+    mpu6050_init("i2c1");
+    mpu6050_reset();
+
+    rt_kprintf("Init MPU6050 done\n");
+
+    while(1)
     {
-        rt_kprintf("write fail!");
+        rt_mutex_take(mutex, RT_WAITING_FOREVER);
+
+        mpu6050_read_raw(acc, gyro, &temp);
+
+        rt_kprintf("Acc. X = %d, Y = %d, Z = %d\n", acc[0], acc[1], acc[2]);
+        rt_kprintf("Gyro. X = %d, Y = %d, Z = %d\n", gyro[0], gyro[1], gyro[2]);
+        rt_kprintf("Temp. = %d\n", (rt_int16_t)((temp / 340.0) + 36.53));
+
+        rt_mutex_release(mutex);
+
+        rt_thread_mdelay(3000);
+
     }
+
 }
 
-static void mpu6050_read_raw(int16_t accel[3], int16_t gyro[3], int16_t *temp)
+
+
+static struct rt_thread consumer;
+static char consumer_stack[1024];
+static void consumer_entry(void* parameter)
 {
-    // For this particular device, we send the device the register we want to read
-    // first, then subsequently read from the device. The register is auto incrementing
-    // so we don't need to keep sending the register we want, just the first.
 
-    uint8_t buffer[6];
+    static rt_uint32_t addr = 0x00;
+    static uint8_t addr8[3];
 
-    // Start reading acceleration registers from register 0x3B for 6 bytes
-    struct rt_i2c_msg msgs;
-    msgs.buf[0] = 0x3B;
-    msgs.addr = addr;
-    msgs.len = 1;
-    msgs.flags = RT_I2C_WR;
-    if (rt_i2c_transfer(i2c_device, &msgs, 1) != 1)
+    static rt_uint8_t acc8[6], gyro8[6], temp8[2];
+
+    int i;
+    i = w25q64_init();
+    if(i)
     {
-        rt_kprintf("write fail!");
-    }
-    msgs.addr = addr;
-    msgs.len = 6;
-    msgs.flags = RT_I2C_RD;
-    if (rt_i2c_transfer(i2c_device, &msgs, 1) != 1)
-    {
-        rt_kprintf("read fail!");
+        rt_kprintf("Error on spi device");
+        rt_thread_suspend(&consumer);
     }
 
-    for (int i = 0; i < 3; i++)
+    w25q64_control(CHIP_ERASE, RT_NULL, RT_NULL, RT_NULL);
+
+    while(1)
     {
-        accel[i] = (buffer[i * 2] << 8 | buffer[(i * 2) + 1]);
+        rt_mutex_take(mutex, RT_WAITING_FOREVER);
+
+        int j = 0;
+
+        for(i = 0; i < 3; i++)
+        {
+            acc8[j] = (rt_uint8_t)acc[i];
+            gyro8[j] = (rt_uint8_t)gyro[i];
+            j++;
+            acc8[j] = (rt_uint8_t)(acc[i] << 8);
+            gyro8[j] = (rt_uint8_t)(gyro[i] << 8);
+            j++;
+        }
+
+        temp8[0] = (rt_uint8_t)temp;
+        temp8[1] = (rt_uint8_t)(temp << 8);
+
+        addr8[0] = (rt_uint8_t)addr;
+        addr8[1] = (rt_uint8_t)(addr << 8);
+        addr8[2] = (rt_uint8_t)(addr << 16);
+        w25q64_control(PAGE_PROGRAM, addr8, 6, acc8);
+        rt_kprintf("Wrote acc data on FLASH\n");
+
+        addr += 0x03;
+        addr8[0] = (rt_uint8_t)addr;
+        addr8[1] = (rt_uint8_t)(addr << 8);
+        addr8[2] = (rt_uint8_t)(addr << 16);
+        w25q64_control(PAGE_PROGRAM, addr8, 6, gyro8);
+        rt_kprintf("Wrote gyro data on FLASH\n");
+
+        addr8[0] = (rt_uint8_t)addr;
+        addr8[1] = (rt_uint8_t)(addr << 8);
+        addr8[2] = (rt_uint8_t)(addr << 16);
+        addr += 0x03;
+        w25q64_control(PAGE_PROGRAM, addr8, 2, temp8);
+        rt_kprintf("Wrote temp data on FLASH\n");
+
+        addr += 0x01;
+
+        rt_thread_mdelay(1000);
+
+        rt_uint8_t a[3] = {0x00, 0x00, 0x00};
+        rt_uint8_t rd[28];
+        w25q64_control(READ_DATA, a, 28, rd);
+
+        for(i = 0; i < 28; i+=2)
+        {
+            rt_kprintf("%d\t", (int16_t)(rd[i]) + ((int16_t)(rd[i + 1]) >> 8));
+        }
+        rt_kprintf("\n");
+
+        rt_mutex_release(mutex);
+
+        rt_thread_mdelay(4000);
     }
 
-    // Now gyro data from reg 0x43 for 6 bytes
-    // The register is auto incrementing on each read
-    msgs.buf[0] = 0x43;
-    msgs.addr = addr;
-    msgs.len = 1;
-    msgs.flags = RT_I2C_WR;
-    if (rt_i2c_transfer(i2c_device, &msgs, 1) != 1)
-    {
-        rt_kprintf("write fail!");
-    }
-    msgs.addr = addr;
-    msgs.len = 6;
-    msgs.flags = RT_I2C_RD;
-    if (rt_i2c_transfer(i2c_device, &msgs, 1) != 1)
-    {
-        rt_kprintf("read fail!");
-    }
-
-    for (int i = 0; i < 3; i++)
-    {
-        gyro[i] = (buffer[i * 2] << 8 | buffer[(i * 2) + 1]);
-        ;
-    }
-
-    // Now temperature from reg 0x41 for 2 bytes
-    // The register is auto incrementing on each read
-    msgs.buf[0] = 0x41;
-    msgs.addr = addr;
-    msgs.len = 1;
-    msgs.flags = RT_I2C_WR;
-    if (rt_i2c_transfer(i2c_device, &msgs, 1) != 1)
-    {
-        rt_kprintf("write fail!");
-    }
-    msgs.addr = addr;
-    msgs.len = 2;
-    msgs.flags = RT_I2C_RD;
-    if (rt_i2c_transfer(i2c_device, &msgs, 1) != 1)
-    {
-        rt_kprintf("read fail!");
-    }
-
-    *temp = buffer[0] << 8 | buffer[1];
 }
 
 int main(void)
 {
-    xeno_main(1);
     rt_kprintf("Hello, RT-Thread!\n");
 
     rt_pin_mode(LED_PIN, PIN_MODE_OUTPUT);
 
-    stdio_init_all();
-    printf("Hello, MPU6050! Reading raw data from registers...\n");
+    rt_pin_mode(PUSHBUTTON, PIN_MODE_INPUT);
 
-    i2c_device = rt_i2c_bus_device_find("i2c0");
-    if (i2c_device == RT_NULL)
+    mutex = rt_mutex_create("mutex", RT_IPC_FLAG_FIFO);
+    if (mutex == RT_NULL)
     {
-        rt_kprintf("i2c bus device %s not found! ", "i2c0");
-        return -RT_ENOSYS;
+        rt_kprintf("create mutex failed.\n");
+        return -1;
     }
 
-    // This example will use I2C0 on the default SDA and SCL pins (4, 5 on a Pico)
-    gpio_set_function(4, GPIO_FUNC_I2C);
-    gpio_set_function(5, GPIO_FUNC_I2C);
-    gpio_pull_up(4);
-    gpio_pull_up(5);
-    // Make the I2C pins available to picotool
-    bi_decl(bi_2pins_with_func(4, 5, GPIO_FUNC_I2C));
+    rt_thread_init(&producer, "producer", producer_entry, RT_NULL, &producer_stack[0], sizeof(producer_stack), THREAD_PRIORITY, THREAD_TIMESLICE);
 
-    mpu6050_reset();
+    rt_thread_init(&consumer, "consumer", consumer_entry, RT_NULL, &consumer_stack[0], sizeof(consumer_stack), THREAD_PRIORITY, THREAD_TIMESLICE);
 
-    int16_t acceleration[3], gyro[3], temp;
 
-    while (1)
-    {
-        mpu6050_read_raw(acceleration, gyro, &temp);
+    rt_thread_startup(&producer);
+    rt_thread_startup(&consumer);
+
+    //while (1)
+    //{
 
         // These are the raw numbers from the chip, so will need tweaking to be really useful.
         // See the datasheet for more information
-        rt_kprintf("Acc. X = %d, Y = %d, Z = %d\n", acceleration[0], acceleration[1], acceleration[2]);
-        rt_kprintf("Gyro. X = %d, Y = %d, Z = %d\n", gyro[0], gyro[1], gyro[2]);
+        //rt_kprintf("Acc. X = %d, Y = %d, Z = %d\n", acceleration[0], acceleration[1], acceleration[2]);
+        //rt_kprintf("Gyro. X = %d, Y = %d, Z = %d\n", gyro[0], gyro[1], gyro[2]);
         // Temperature is simple so use the datasheet calculation to get deg C.
         // Note this is chip temperature.
-        rt_kprintf("Temp. = %f\n", (temp / 340.0) + 36.53);
+        //rt_kprintf("Temp. = %d\n", (temp / 340.0) + 36.53);
 
-        rt_thread_mdelay(100);
-    }
+    //}
 }

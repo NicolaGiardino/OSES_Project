@@ -1,5 +1,5 @@
 /*
- * COPYRIGHT (C) 2006-2021, RT-Thread Development Team
+ * COPYRIGHT (C) 2006-2018, RT-Thread Development Team
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -360,7 +360,7 @@ err_t sys_mutex_new(sys_mutex_t *mutex)
     rt_snprintf(tname, RT_NAME_MAX, "%s%d", SYS_LWIP_MUTEX_NAME, counter);
     counter ++;
 
-    tmpmutex = rt_mutex_create(tname, RT_IPC_FLAG_PRIO);
+    tmpmutex = rt_mutex_create(tname, RT_IPC_FLAG_FIFO);
     if (tmpmutex == RT_NULL)
         return ERR_MEM;
     else
@@ -778,30 +778,6 @@ void ppp_trace(int level, const char *format, ...)
     va_end(args);
 }
 #endif
-
-struct netif *lwip_ip4_route_src(const ip4_addr_t *dest, const ip4_addr_t *src)
-{
-    struct netif *netif;
-
-    /* iterate through netifs */
-    for (netif = netif_list; netif != NULL; netif = netif->next)
-    {
-        /* is the netif up, does it have a link and a valid address? */
-        if (netif_is_up(netif) && netif_is_link_up(netif) && !ip4_addr_isany_val(*netif_ip4_addr(netif)))
-        {
-            /* gateway matches on a non broadcast interface? (i.e. peer in a point to point interface) */
-            if (src != NULL)
-            {
-                if (ip4_addr_cmp(src, netif_ip4_addr(netif)))
-                {
-                    return netif;
-                }
-            }
-        }
-    }
-    netif = netif_default;
-    return netif;
-}
 
 /*
  * export bsd socket symbol for RT-Thread Application Module

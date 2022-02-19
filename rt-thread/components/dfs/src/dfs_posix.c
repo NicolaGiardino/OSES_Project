@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2021, RT-Thread Development Team
+ * Copyright (c) 2006-2018, RT-Thread Development Team
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -9,9 +9,15 @@
  * 2018-02-07     Bernard      Change the 3rd parameter of open/fcntl/ioctl to '...'
  */
 
-#include <dfs_file.h>
-#include <dfs_private.h>
-#include <sys/errno.h>
+#include <dfs.h>
+#include <dfs_posix.h>
+#include "dfs_private.h"
+
+/**
+ * @addtogroup FsPosixApi
+ */
+
+/*@{*/
 
 /**
  * this function is a POSIX compliant version, which will open a file and
@@ -104,10 +110,10 @@ RTM_EXPORT(close);
  * @return the actual read data buffer length. If the returned value is 0, it
  * may be reach the end of file, please check errno.
  */
-#ifdef _READ_WRITE_RETURN_TYPE
-_READ_WRITE_RETURN_TYPE read(int fd, void *buf, size_t len) /* some gcc tool chains will use different data structure */
+#if defined(RT_USING_NEWLIB) && defined(_EXFUN)
+_READ_WRITE_RETURN_TYPE _EXFUN(read, (int fd, void *buf, size_t len))
 #else
-ssize_t read(int fd, void *buf, size_t len)
+int read(int fd, void *buf, size_t len)
 #endif
 {
     int result;
@@ -148,10 +154,10 @@ RTM_EXPORT(read);
  *
  * @return the actual written data buffer length.
  */
-#ifdef _READ_WRITE_RETURN_TYPE
-_READ_WRITE_RETURN_TYPE write(int fd, const void *buf, size_t len) /* some gcc tool chains will use different data structure */
+#if defined(RT_USING_NEWLIB) && defined(_EXFUN)
+_READ_WRITE_RETURN_TYPE _EXFUN(write, (int fd, const void *buf, size_t len))
 #else
-ssize_t write(int fd, const void *buf, size_t len)
+int write(int fd, const void *buf, size_t len)
 #endif
 {
     int result;
@@ -248,7 +254,6 @@ off_t lseek(int fd, off_t offset, int whence)
 }
 RTM_EXPORT(lseek);
 
-#ifndef _WIN32
 /**
  * this function is a POSIX compliant version, which will rename old file name
  * to new file name.
@@ -275,7 +280,6 @@ int rename(const char *old_file, const char *new_file)
     return 0;
 }
 RTM_EXPORT(rename);
-#endif
 
 /**
  * this function is a POSIX compliant version, which will unlink (remove) a
@@ -301,6 +305,7 @@ int unlink(const char *pathname)
 }
 RTM_EXPORT(unlink);
 
+#ifndef _WIN32 /* we can not implement these functions */
 /**
  * this function is a POSIX compliant version, which will get file information.
  *
@@ -365,6 +370,7 @@ int fstat(int fildes, struct stat *buf)
     return RT_EOK;
 }
 RTM_EXPORT(fstat);
+#endif
 
 /**
  * this function is a POSIX compliant version, which shall request that all data
@@ -578,6 +584,11 @@ int mkdir(const char *path, mode_t mode)
     return 0;
 }
 RTM_EXPORT(mkdir);
+
+#ifdef RT_USING_FINSH
+#include <finsh.h>
+FINSH_FUNCTION_EXPORT(mkdir, create a directory);
+#endif
 
 /**
  * this function is a POSIX compliant version, which will remove a directory.
@@ -935,3 +946,5 @@ char *getcwd(char *buf, size_t size)
     return buf;
 }
 RTM_EXPORT(getcwd);
+
+/* @} */

@@ -85,7 +85,7 @@ class Win32Spawn:
                 try:
                     os.remove(f)
                 except Exception as e:
-                    print('Error removing file: ' + e)
+                    print ('Error removing file: ' + e)
                     return -1
             return 0
 
@@ -106,8 +106,8 @@ class Win32Spawn:
         try:
             proc = subprocess.Popen(cmdline, env=_e, shell=False)
         except Exception as e:
-            print('Error in calling command:' + cmdline.split(' ')[0])
-            print('Exception: ' + os.strerror(e.errno))
+            print ('Error in calling command:' + cmdline.split(' ')[0])
+            print ('Exception: ' + os.strerror(e.errno))
             if (os.strerror(e.errno) == "No such file or directory"):
                 print ("\nPlease check Toolchains PATH setting.\n")
 
@@ -208,7 +208,7 @@ def PrepareBuilding(env, root_directory, has_libcpu=False, remove_components = [
     AddOption('--target',
                       dest = 'target',
                       type = 'string',
-                      help = 'set target project: mdk/mdk4/mdk5/iar/vs/vsc/ua/cdk/ses/makefile/eclipse/codelite/cmake')
+                      help = 'set target project: mdk/mdk4/mdk5/iar/vs/vsc/ua/cdk/ses/makefile/eclipse')
     AddOption('--stackanalysis',
                 dest = 'stackanalysis',
                 action = 'store_true',
@@ -256,10 +256,7 @@ def PrepareBuilding(env, root_directory, has_libcpu=False, remove_components = [
                 'cdk':('gcc', 'gcc'),
                 'makefile':('gcc', 'gcc'),
                 'eclipse':('gcc', 'gcc'),
-                'ses' : ('gcc', 'gcc'),
-                'cmake':('gcc', 'gcc'),
-                'cmake-armclang':('keil', 'armclang'),
-                'codelite' : ('gcc', 'gcc')}
+                'ses' : ('gcc', 'gcc')}
     tgt_name = GetOption('target')
 
     if tgt_name:
@@ -276,8 +273,11 @@ def PrepareBuilding(env, root_directory, has_libcpu=False, remove_components = [
             os.environ['RTT_CC'] = rtconfig.CROSS_TOOL
             utils.ReloadModule(rtconfig)
         except KeyError:
-            print('Unknow target: '+ tgt_name+'. Avaible targets: ' +', '.join(tgt_dict.keys()))
+            print ('Unknow target: '+ tgt_name+'. Avaible targets: ' +', '.join(tgt_dict.keys()))
             sys.exit(1)
+    elif (GetDepend('RT_USING_NEWLIB') == False and GetDepend('RT_USING_NOLIBC') == False) \
+        and rtconfig.PLATFORM == 'gcc':
+        AddDepend('RT_USING_MINILIBC')
 
     # auto change the 'RTT_EXEC_PATH' when 'rtconfig.EXEC_PATH' get failed
     if not os.path.exists(rtconfig.EXEC_PATH):
@@ -448,11 +448,6 @@ def PrepareBuilding(env, root_directory, has_libcpu=False, remove_components = [
                            variant_dir=kernel_vdir + '/components',
                            duplicate=0,
                            exports='remove_components'))
-    # include testcases
-    if os.path.isfile(os.path.join(Rtt_Root, 'examples/utest/testcases/SConscript')):
-        objs.extend(SConscript(Rtt_Root + '/examples/utest/testcases/SConscript',
-                           variant_dir=kernel_vdir + '/examples/utest/testcases',
-                           duplicate=0))
 
     return objs
 
@@ -616,17 +611,6 @@ def MergeGroup(src_group, group):
         else:
             src_group['LOCAL_ASFLAGS'] = group['LOCAL_ASFLAGS']
 
-def _PretreatListParameters(target_list):
-    while '' in target_list: # remove null strings
-        target_list.remove('')
-    while ' ' in target_list: # remove ' '
-        target_list.remove(' ')
-
-    if(len(target_list) == 0):
-        return False # ignore this list, don't add this list to the parameter
-
-    return True # permit to add this list to the parameter
-
 def DefineGroup(name, src, depend, **parameters):
     global Env
     if not GetDepend(depend):
@@ -644,36 +628,24 @@ def DefineGroup(name, src, depend, **parameters):
     group['name'] = name
     group['path'] = group_path
     if type(src) == type([]):
-        # remove duplicate elements from list
-        src = list(set(src))
         group['src'] = File(src)
     else:
         group['src'] = src
 
     if 'CCFLAGS' in group:
-        target = group['CCFLAGS']
-        if len(target) > 0:
-            Env.AppendUnique(CCFLAGS = target)
+        Env.AppendUnique(CCFLAGS = group['CCFLAGS'])
     if 'CPPPATH' in group:
-        target = group['CPPPATH']
-        if _PretreatListParameters(target) == True:
-            paths = []
-            for item in target:
-                paths.append(os.path.abspath(item))
-            target = paths
-            Env.AppendUnique(CPPPATH = target)
+        paths = []
+        for item in group['CPPPATH']:
+            paths.append(os.path.abspath(item))
+        group['CPPPATH'] = paths
+        Env.AppendUnique(CPPPATH = group['CPPPATH'])
     if 'CPPDEFINES' in group:
-        target = group['CPPDEFINES']
-        if _PretreatListParameters(target) == True:
-            Env.AppendUnique(CPPDEFINES = target)
+        Env.AppendUnique(CPPDEFINES = group['CPPDEFINES'])
     if 'LINKFLAGS' in group:
-        target = group['LINKFLAGS']
-        if len(target) > 0:
-            Env.AppendUnique(LINKFLAGS = target)
+        Env.AppendUnique(LINKFLAGS = group['LINKFLAGS'])
     if 'ASFLAGS' in group:
-        target = group['ASFLAGS']
-        if len(target) > 0:
-            Env.AppendUnique(ASFLAGS = target)
+        Env.AppendUnique(ASFLAGS = group['ASFLAGS'])
     if 'LOCAL_CPPPATH' in group:
         paths = []
         for item in group['LOCAL_CPPPATH']:
@@ -690,19 +662,15 @@ def DefineGroup(name, src, depend, **parameters):
     # check whether to clean up library
     if GetOption('cleanlib') and os.path.exists(os.path.join(group['path'], GroupLibFullName(name, Env))):
         if group['src'] != []:
-            print('Remove library:'+ GroupLibFullName(name, Env))
+            print ('Remove library:'+ GroupLibFullName(name, Env))
             fn = os.path.join(group['path'], GroupLibFullName(name, Env))
             if os.path.exists(fn):
                 os.unlink(fn)
 
     if 'LIBS' in group:
-        target = group['LIBS']
-        if _PretreatListParameters(target) == True:
-            Env.AppendUnique(LIBS = target)
+        Env.AppendUnique(LIBS = group['LIBS'])
     if 'LIBPATH' in group:
-        target = group['LIBPATH']
-        if _PretreatListParameters(target) == True:
-            Env.AppendUnique(LIBPATH = target)
+        Env.AppendUnique(LIBPATH = group['LIBPATH'])
 
     # check whether to build group library
     if 'LIBRARY' in group:
@@ -767,7 +735,7 @@ def BuildLibInstallAction(target, source, env):
         if Group['name'] == lib_name:
             lib_name = GroupLibFullName(Group['name'], env)
             dst_name = os.path.join(Group['path'], lib_name)
-            print('Copy '+lib_name+' => ' + dst_name)
+            print ('Copy '+lib_name+' => ' +dst_name)
             do_copy_file(lib_name, dst_name)
             break
 
@@ -904,14 +872,6 @@ def GenTargetProject(program = None):
     if GetOption('target') == 'eclipse':
         from eclipse import TargetEclipse
         TargetEclipse(Env, GetOption('reset-project-config'), GetOption('project-name'))
-        
-    if GetOption('target') == 'codelite':
-        from codelite import TargetCodelite
-        TargetCodelite(Projects, program)
-
-    if GetOption('target') == 'cmake' or GetOption('target') == 'cmake-armclang':
-        from cmake import CMakeProject
-        CMakeProject(Env,Projects)
 
 
 def EndBuilding(target, program = None):
@@ -951,11 +911,14 @@ def EndBuilding(target, program = None):
         project_name = GetOption('project-name')
 
         if not isinstance(project_path, str) or len(project_path) == 0 :
-            project_path = os.path.join(BSP_ROOT, 'dist_ide_project')
-            print("\nwarning : --project-path not specified, use default path: {0}.".format(project_path))
+            print("\nwarning : --project-path=your_project_path parameter is required.")
+            print("\nstop!")
+            exit(0)
+
         if not isinstance(project_name, str) or len(project_name) == 0:
-            project_name = "dist_ide_project"
-            print("\nwarning : --project-name not specified, use default project name: {0}.".format(project_name))
+            print("\nwarning : --project-name=your_project_name parameter is required.")
+            print("\nstop!")
+            exit(0)
 
         rtt_ide = {'project_path' : project_path, 'project_name' : project_name}
         MkDist(program, BSP_ROOT, Rtt_Root, Env, rtt_ide)
@@ -1029,11 +992,11 @@ def GetVersion():
     prepcessor.process_contents(contents)
     def_ns = prepcessor.cpp_namespace
 
-    version = int([ch for ch in def_ns['RT_VERSION'] if ch in '0123456789.'])
-    subversion = int([ch for ch in def_ns['RT_SUBVERSION'] if ch in '0123456789.'])
+    version = int(filter(lambda ch: ch in '0123456789.', def_ns['RT_VERSION']))
+    subversion = int(filter(lambda ch: ch in '0123456789.', def_ns['RT_SUBVERSION']))
 
     if 'RT_REVISION' in def_ns:
-        revision = int([ch for ch in def_ns['RT_REVISION'] if ch in '0123456789.'])
+        revision = int(filter(lambda ch: ch in '0123456789.', def_ns['RT_REVISION']))
         return '%d.%d.%d' % (version, subversion, revision)
 
     return '0.%d.%d' % (version, subversion)

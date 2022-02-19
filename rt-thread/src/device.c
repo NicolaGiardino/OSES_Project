@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2021, RT-Thread Development Team
+ * Copyright (c) 2006-2018, RT-Thread Development Team
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -12,13 +12,12 @@
  * 2012-12-25     Bernard      return RT_EOK if the device interface not exist.
  * 2013-07-09     Grissiom     add ref_count support
  * 2016-04-02     Bernard      fix the open_flag initialization issue.
- * 2021-03-19     Meco Man     remove rt_device_init_all()
  */
 
 #include <rtthread.h>
-#ifdef RT_USING_POSIX
+#if defined(RT_USING_POSIX)
 #include <rtdevice.h> /* for wqueue_init */
-#endif /* RT_USING_POSIX */
+#endif
 
 #ifdef RT_USING_DEVICE
 
@@ -36,16 +35,14 @@
 #define device_read     (dev->read)
 #define device_write    (dev->write)
 #define device_control  (dev->control)
-#endif /* RT_USING_DEVICE_OPS */
+#endif
 
 /**
- * @brief This function registers a device driver with a specified name.
+ * This function registers a device driver with specified name.
  *
- * @param dev is the pointer of device driver structure.
- *
- * @param name is the device driver's name.
- *
- * @param flags is the capabilities flag of device.
+ * @param dev the pointer of device driver structure
+ * @param name the device driver's name
+ * @param flags the capabilities flag of device
  *
  * @return the error code, RT_EOK on initialization successfully.
  */
@@ -64,19 +61,19 @@ rt_err_t rt_device_register(rt_device_t dev,
     dev->ref_count = 0;
     dev->open_flag = 0;
 
-#ifdef RT_USING_POSIX
+#if defined(RT_USING_POSIX)
     dev->fops = RT_NULL;
     rt_wqueue_init(&(dev->wait_queue));
-#endif /* RT_USING_POSIX */
+#endif
 
     return RT_EOK;
 }
 RTM_EXPORT(rt_device_register);
 
 /**
- * @brief This function removes a previously registered device driver.
+ * This function removes a previously registered device driver
  *
- * @param dev is the pointer of device driver structure.
+ * @param dev the pointer of device driver structure
  *
  * @return the error code, RT_EOK on successfully.
  */
@@ -93,9 +90,22 @@ rt_err_t rt_device_unregister(rt_device_t dev)
 RTM_EXPORT(rt_device_unregister);
 
 /**
- * @brief This function finds a device driver by specified name.
+ * This function initializes all registered device driver
  *
- * @param name is the device driver's name.
+ * @return the error code, RT_EOK on successfully.
+ *
+ * @deprecated since 1.2.x, this function is not needed because the initialization
+ *             of a device is performed when application opens it.
+ */
+rt_err_t rt_device_init_all(void)
+{
+    return RT_EOK;
+}
+
+/**
+ * This function finds a device driver by specified name.
+ *
+ * @param name the device driver's name
  *
  * @return the registered device driver on successful, or RT_NULL on failure.
  */
@@ -107,11 +117,10 @@ RTM_EXPORT(rt_device_find);
 
 #ifdef RT_USING_HEAP
 /**
- * @brief This function creates a device object with user data size.
+ * This function creates a device object with user data size.
  *
- * @param type is the type of the device object.
- *
- * @param attach_size is the size of user data.
+ * @param type, the kind type of this device object.
+ * @param attach_size, the size of user data.
  *
  * @return the allocated device object, or RT_NULL when failed.
  */
@@ -137,9 +146,9 @@ rt_device_t rt_device_create(int type, int attach_size)
 RTM_EXPORT(rt_device_create);
 
 /**
- * @brief This function destroy the specific device object.
+ * This function destroy the specific device object.
  *
- * @param dev is a specific device object.
+ * @param dev, the specific device object.
  */
 void rt_device_destroy(rt_device_t dev)
 {
@@ -153,14 +162,14 @@ void rt_device_destroy(rt_device_t dev)
     rt_free(dev);
 }
 RTM_EXPORT(rt_device_destroy);
-#endif /* RT_USING_HEAP */
+#endif
 
 /**
- * @brief This function will initialize the specified device.
+ * This function will initialize the specified device
  *
- * @param dev is the pointer of device driver structure.
+ * @param dev the pointer of device driver structure
  *
- * @return the result, RT_EOK on successfully.
+ * @return the result
  */
 rt_err_t rt_device_init(rt_device_t dev)
 {
@@ -190,13 +199,12 @@ rt_err_t rt_device_init(rt_device_t dev)
 }
 
 /**
- * @brief This function will open a device.
+ * This function will open a device
  *
- * @param dev is the pointer of device driver structure.
+ * @param dev the pointer of device driver structure
+ * @param oflag the flags for device open
  *
- * @param oflag is the flags for device open.
- *
- * @return the result, RT_EOK on successfully.
+ * @return the result
  */
 rt_err_t rt_device_open(rt_device_t dev, rt_uint16_t oflag)
 {
@@ -257,11 +265,11 @@ rt_err_t rt_device_open(rt_device_t dev, rt_uint16_t oflag)
 RTM_EXPORT(rt_device_open);
 
 /**
- * @brief This function will close a device.
+ * This function will close a device
  *
- * @param dev is the pointer of device driver structure.
+ * @param dev the pointer of device driver structure
  *
- * @return the result, RT_EOK on successfully.
+ * @return the result
  */
 rt_err_t rt_device_close(rt_device_t dev)
 {
@@ -293,15 +301,12 @@ rt_err_t rt_device_close(rt_device_t dev)
 RTM_EXPORT(rt_device_close);
 
 /**
- * @brief This function will read some data from a device.
+ * This function will read some data from a device.
  *
- * @param dev is the pointer of device driver structure.
- *
- * @param pos is the position when reading.
- *
- * @param buffer is a data buffer to save the read data.
- *
- * @param size is the size of buffer.
+ * @param dev the pointer of device driver structure
+ * @param pos the position of reading
+ * @param buffer the data buffer to save read data
+ * @param size the size of buffer
  *
  * @return the actually read size on successful, otherwise negative returned.
  *
@@ -335,15 +340,12 @@ rt_size_t rt_device_read(rt_device_t dev,
 RTM_EXPORT(rt_device_read);
 
 /**
- * @brief This function will write some data to a device.
+ * This function will write some data to a device.
  *
- * @param dev is the pointer of device driver structure.
- *
- * @param pos is the position when writing.
- *
- * @param buffer is the data buffer to be written to device.
- *
- * @param size is the size of buffer.
+ * @param dev the pointer of device driver structure
+ * @param pos the position of written
+ * @param buffer the data buffer to be written to device
+ * @param size the size of buffer
  *
  * @return the actually written size on successful, otherwise negative returned.
  *
@@ -377,15 +379,13 @@ rt_size_t rt_device_write(rt_device_t dev,
 RTM_EXPORT(rt_device_write);
 
 /**
- * @brief This function will perform a variety of control functions on devices.
+ * This function will perform a variety of control functions on devices.
  *
- * @param dev is the pointer of device driver structure.
+ * @param dev the pointer of device driver structure
+ * @param cmd the command sent to device
+ * @param arg the argument of command
  *
- * @param cmd is the command sent to device.
- *
- * @param arg is the argument of command.
- *
- * @return the result, -RT_ENOSYS for failed.
+ * @return the result
  */
 rt_err_t rt_device_control(rt_device_t dev, int cmd, void *arg)
 {
@@ -403,12 +403,11 @@ rt_err_t rt_device_control(rt_device_t dev, int cmd, void *arg)
 RTM_EXPORT(rt_device_control);
 
 /**
- * @brief This function will set the reception indication callback function. This callback function
- *        is invoked when this device receives data.
+ * This function will set the reception indication callback function. This callback function
+ * is invoked when this device receives data.
  *
- * @param dev is the pointer of device driver structure.
- *
- * @param rx_ind is the indication callback function.
+ * @param dev the pointer of device driver structure
+ * @param rx_ind the indication callback function
  *
  * @return RT_EOK
  */
@@ -426,12 +425,11 @@ rt_device_set_rx_indicate(rt_device_t dev,
 RTM_EXPORT(rt_device_set_rx_indicate);
 
 /**
- * @brief This function will set a callback function. The callback function
- *        will be called when device has written data to physical hardware.
+ * This function will set the indication callback function when device has
+ * written data to physical hardware.
  *
- * @param dev is the pointer of device driver structure.
- *
- * @param tx_done is the indication callback function.
+ * @param dev the pointer of device driver structure
+ * @param tx_done the indication callback function
  *
  * @return RT_EOK
  */
@@ -448,4 +446,4 @@ rt_device_set_tx_complete(rt_device_t dev,
 }
 RTM_EXPORT(rt_device_set_tx_complete);
 
-#endif /* RT_USING_DEVICE */
+#endif

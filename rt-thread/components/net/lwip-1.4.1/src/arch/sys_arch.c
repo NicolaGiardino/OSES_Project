@@ -1,5 +1,5 @@
 /*
- * COPYRIGHT (C) 2006-2021, RT-Thread Development Team
+ * COPYRIGHT (C) 2006-2018, RT-Thread Development Team
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -195,9 +195,9 @@ int lwip_system_init(void)
         netifapi_netif_set_addr(netif_default, &ipaddr, &netmask, &gw);
     }
 #endif
-    rt_kprintf("lwIP-%d.%d.%d initialized!\n", LWIP_VERSION_MAJOR, LWIP_VERSION_MINOR, LWIP_VERSION_REVISION);
+	rt_kprintf("lwIP-%d.%d.%d initialized!\n", LWIP_VERSION_MAJOR, LWIP_VERSION_MINOR, LWIP_VERSION_REVISION);
 
-    return 0;
+	return 0;
 }
 INIT_PREV_EXPORT(lwip_system_init);
 
@@ -341,7 +341,7 @@ err_t sys_mutex_new(sys_mutex_t *mutex)
     rt_snprintf(tname, RT_NAME_MAX, "%s%d", SYS_LWIP_MUTEX_NAME, counter);
     counter ++;
 
-    tmpmutex = rt_mutex_create(tname, RT_IPC_FLAG_PRIO);
+    tmpmutex = rt_mutex_create(tname, RT_IPC_FLAG_FIFO);
     if (tmpmutex == RT_NULL)
         return ERR_MEM;
     else

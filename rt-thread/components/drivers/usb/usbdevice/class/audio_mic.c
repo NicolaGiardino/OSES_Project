@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2021, RT-Thread Development Team
+ * Copyright (c) 2006-2019, RT-Thread Development Team
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -11,8 +11,7 @@
 #include <rthw.h>
 #include <rtdevice.h>
 #include "drivers/usb_device.h"
-
-#include "uaudioreg.h"
+#include "audio.h"
 
 #define DBG_TAG              "usbd.audio.mic"
 #define DBG_LVL              DBG_INFO
@@ -36,7 +35,6 @@
 #define EVENT_RECORD_STOP    (1 << 1)
 #define EVENT_RECORD_DATA    (1 << 2)
 
-#define MIC_INTF_STR_INDEX 8
 /*
  * uac mic descriptor define
  */
@@ -47,6 +45,9 @@
 #define UAC_MAX_PACKET_SIZE         64
 #define UAC_EP_MAX_PACKET_SIZE      32
 #define UAC_CHANNEL_NUM             RECORD_CHANNEL
+#define UAC_INTR_NUM                1
+#define UAC_CH_NUM                  1
+#define UAC_FORMAT_NUM              1
 
 struct uac_ac_descriptor
 {
@@ -54,21 +55,21 @@ struct uac_ac_descriptor
     struct uiad_descriptor iad_desc;
 #endif
     struct uinterface_descriptor intf_desc;
-    struct usb_audio_control_descriptor hdr_desc;
-    struct usb_audio_input_terminal it_desc;
-    struct usb_audio_output_terminal ot_desc;
+    DECLARE_UAC_AC_HEADER_DESCRIPTOR(UAC_INTR_NUM) hdr_desc;
+    struct uac_input_terminal_descriptor it_desc;
+    struct uac1_output_terminal_descriptor ot_desc;
 #if UAC_USE_FEATURE_UNIT
-    struct usb_audio_feature_unit feature_unit_desc;
+    DECLARE_UAC_FEATURE_UNIT_DESCRIPTOR(UAC_CH_NUM) feature_unit_desc;
 #endif
 };
 
 struct uac_as_descriptor
 {
     struct uinterface_descriptor intf_desc;
-    struct usb_audio_streaming_interface_descriptor hdr_desc;
-    struct usb_audio_streaming_type1_descriptor format_type_desc;
+    struct uac1_as_header_descriptor hdr_desc;
+    DECLARE_UAC_FORMAT_TYPE_I_DISCRETE_DESC(UAC_FORMAT_NUM) format_type_desc;
     struct uendpoint_descriptor ep_desc;
-    struct usb_audio_streaming_endpoint_descriptor as_ep_desc;
+    struct uac_iso_endpoint_descriptor as_ep_desc;
 };
 
 /*
@@ -127,7 +128,7 @@ const static char *_ustring[] =
 {
     "Language",
     "RT-Thread Team.",
-    "RT-Thread Audio Microphone",
+    "Microphone",
     "32021919830108",
     "Configuration",
     "Interface",
@@ -159,17 +160,13 @@ static struct uac_ac_descriptor ac_desc =
         USB_CLASS_AUDIO,
         USB_SUBCLASS_AUDIOCONTROL,
         0x00,
-#ifdef RT_USB_DEVICE_COMPOSITE
-        MIC_INTF_STR_INDEX,
-#else
         0x00,
-#endif
     },
     /* Header Descriptor */
     {
-        sizeof(struct usb_audio_control_descriptor),
+        UAC_DT_AC_HEADER_SIZE(UAC_INTR_NUM),
         UAC_CS_INTERFACE,
-        UDESCSUB_AC_HEADER,
+        UAC_HEADER,
         0x0100,    /* Version: 1.00 */
         0x001E,    /* Total length: 30 */
         0x01,      /* Total number of interfaces: 1 */
@@ -177,9 +174,9 @@ static struct uac_ac_descriptor ac_desc =
     },
     /*  Input Terminal Descriptor */
     {
-        sizeof(struct usb_audio_input_terminal),
+        UAC_DT_INPUT_TERMINAL_SIZE,
         UAC_CS_INTERFACE,
-        UDESCSUB_AC_INPUT,
+        UAC_INPUT_TERMINAL,
         0x01,      /* Terminal ID: 1 */
         0x0201,    /* Terminal Type: Microphone (0x0201) */
         0x00,      /* Assoc Terminal: 0 */
@@ -190,9 +187,9 @@ static struct uac_ac_descriptor ac_desc =
     },
     /*  Output Terminal Descriptor */
     {
-        sizeof(struct usb_audio_output_terminal),
+        UAC_DT_OUTPUT_TERMINAL_SIZE,
         UAC_CS_INTERFACE,
-        UDESCSUB_AC_OUTPUT,
+        UAC_OUTPUT_TERMINAL,
         0x02,      /* Terminal ID: 2 */
         0x0101,    /* Terminal Type: USB Streaming (0x0101) */
         0x00,      /* Assoc Terminal: 0 */
@@ -202,12 +199,11 @@ static struct uac_ac_descriptor ac_desc =
 #if UAC_USE_FEATURE_UNIT
     /*  Feature unit Descriptor */
     {
-        sizeof(struct usb_audio_feature_unit),
+        UAC_DT_FEATURE_UNIT_SIZE(UAC_CH_NUM),
         UAC_CS_INTERFACE,
-        UDESCSUB_AC_FEATURE,
+        UAC_FEATURE_UNIT,
         0x02,
-        0x01,
-        0x01,
+        0x0101,
         0x00,
         0x01,
     },
@@ -245,19 +241,19 @@ static struct uac_as_descriptor as_desc =
     },
     /* General AS Descriptor */
     {
-        sizeof(struct usb_audio_streaming_interface_descriptor),
+        UAC_DT_AS_HEADER_SIZE,
         UAC_CS_INTERFACE,
-        AS_GENERAL,
+        UAC_AS_GENERAL,
         0x02,      /* Terminal ID: 2 */
         0x01,      /* Interface delay in frames: 1 */
-        UA_FMT_PCM,
+        UAC_FORMAT_TYPE_I_PCM,
     },
     /* Format type i Descriptor */
     {
-        sizeof(struct usb_audio_streaming_type1_descriptor),
+        UAC_FORMAT_TYPE_I_DISCRETE_DESC_SIZE(UAC_FORMAT_NUM),
         UAC_CS_INTERFACE,
-        FORMAT_TYPE,
-        FORMAT_TYPE_I,
+        UAC_FORMAT_TYPE,
+        UAC_FORMAT_TYPE_I,
         UAC_CHANNEL_NUM,
         2,         /* Subframe Size: 2 */
         RESOLUTION_BITS,
@@ -275,9 +271,9 @@ static struct uac_as_descriptor as_desc =
     },
     /* AS Endpoint Descriptor */
     {
-        sizeof(struct usb_audio_streaming_endpoint_descriptor),
+        UAC_ISO_ENDPOINT_DESC_SIZE,
         UAC_CS_ENDPOINT,
-        AS_GENERAL,
+        UAC_MS_GENERAL,
     },
 };
 
@@ -475,9 +471,9 @@ static rt_err_t _uac_descriptor_config(struct uac_ac_descriptor *ac,
 
 static rt_err_t _uac_samplerate_config(struct uac_as_descriptor *as, rt_uint32_t samplerate)
 {
-    as->format_type_desc.tSamFreq[0 * 3 + 2] = samplerate >> 16 & 0xff;
-    as->format_type_desc.tSamFreq[0 * 3 + 1] = samplerate >> 8 & 0xff;
-    as->format_type_desc.tSamFreq[0 * 3 + 0] = samplerate & 0xff;
+    as->format_type_desc.tSamFreq[0][2] = samplerate >> 16 & 0xff;
+    as->format_type_desc.tSamFreq[0][1] = samplerate >> 8 & 0xff;
+    as->format_type_desc.tSamFreq[0][0] = samplerate & 0xff;
     return RT_EOK;
 }
 
@@ -499,12 +495,9 @@ ufunction_t rt_usbd_function_uac_mic_create(udevice_t device)
     /* parameter check */
     RT_ASSERT(device != RT_NULL);
 
-#ifdef RT_USB_DEVICE_COMPOSITE
-    rt_usbd_device_set_interface_string(device, MIC_INTF_STR_INDEX, _ustring[2]);
-#else
     /* set usb device string description */
     rt_usbd_device_set_string(device, _ustring);
-#endif
+
     /* create a uac function */
     func = rt_usbd_function_new(device, &dev_desc, &ops);
     //not support HS
