@@ -114,7 +114,7 @@ static void mpu6050_read_raw(int16_t accel[3], int16_t gyro[3], int16_t *temp)
 
 int main(void)
 {
-    xeno_main(1);
+    xeno_main();
     rt_kprintf("Hello, RT-Thread!\n");
 
     rt_pin_mode(LED_PIN, PIN_MODE_OUTPUT);
