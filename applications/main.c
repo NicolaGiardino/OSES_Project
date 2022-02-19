@@ -31,15 +31,21 @@ static void producer_entry(void* parameter)
     mpu6050_init("i2c1");
     mpu6050_reset();
 
+    rt_kprintf("Init MPU6050 done\n");
+
     while(1)
     {
         rt_mutex_take(mutex, RT_WAITING_FOREVER);
 
         mpu6050_read_raw(acc, gyro, &temp);
 
+        rt_kprintf("Acc. X = %d, Y = %d, Z = %d\n", acc[0], acc[1], acc[2]);
+        rt_kprintf("Gyro. X = %d, Y = %d, Z = %d\n", gyro[0], gyro[1], gyro[2]);
+        rt_kprintf("Temp. = %d\n", (rt_int16_t)((temp / 340.0) + 36.53));
+
         rt_mutex_release(mutex);
 
-        rt_thread_mdelay(1000);
+        rt_thread_mdelay(3000);
 
     }
 
@@ -61,7 +67,7 @@ static void consumer_entry(void* parameter)
     i = w25q64_init();
     if(i)
     {
-        rt_kprintf("Error on i2c device");
+        rt_kprintf("Error on spi device");
         rt_thread_suspend(&consumer);
     }
 
@@ -89,23 +95,40 @@ static void consumer_entry(void* parameter)
         addr8[0] = (rt_uint8_t)addr;
         addr8[1] = (rt_uint8_t)(addr << 8);
         addr8[2] = (rt_uint8_t)(addr << 16);
-        w25q64_control(PAGE_PROGRAM, addr8, 3, acc8);
+        w25q64_control(PAGE_PROGRAM, addr8, 6, acc8);
+        rt_kprintf("Wrote acc data on FLASH\n");
 
         addr += 0x03;
         addr8[0] = (rt_uint8_t)addr;
         addr8[1] = (rt_uint8_t)(addr << 8);
         addr8[2] = (rt_uint8_t)(addr << 16);
-        w25q64_control(PAGE_PROGRAM, addr8, 3, gyro8);
+        w25q64_control(PAGE_PROGRAM, addr8, 6, gyro8);
+        rt_kprintf("Wrote gyro data on FLASH\n");
 
         addr8[0] = (rt_uint8_t)addr;
         addr8[1] = (rt_uint8_t)(addr << 8);
         addr8[2] = (rt_uint8_t)(addr << 16);
         addr += 0x03;
-        w25q64_control(PAGE_PROGRAM, addr8, 1, temp8);
+        w25q64_control(PAGE_PROGRAM, addr8, 2, temp8);
+        rt_kprintf("Wrote temp data on FLASH\n");
 
         addr += 0x01;
 
+        rt_thread_mdelay(1000);
+
+        rt_uint8_t a[3] = {0x00, 0x00, 0x00};
+        rt_uint8_t rd[28];
+        w25q64_control(READ_DATA, a, 28, rd);
+
+        for(i = 0; i < 28; i+=2)
+        {
+            rt_kprintf("%d\t", (int16_t)(rd[i]) + ((int16_t)(rd[i + 1]) >> 8));
+        }
+        rt_kprintf("\n");
+
         rt_mutex_release(mutex);
+
+        rt_thread_mdelay(4000);
     }
 
 }
@@ -127,14 +150,14 @@ int main(void)
 
     rt_thread_init(&producer, "producer", producer_entry, RT_NULL, &producer_stack[0], sizeof(producer_stack), THREAD_PRIORITY, THREAD_TIMESLICE);
 
-    rt_thread_init(&consumer, "consumer", consumer_entry, RT_NULL, &consumer_stack, sizeof(consumer_stack), THREAD_PRIORITY, THREAD_TIMESLICE);
+    rt_thread_init(&consumer, "consumer", consumer_entry, RT_NULL, &consumer_stack[0], sizeof(consumer_stack), THREAD_PRIORITY, THREAD_TIMESLICE);
 
 
     rt_thread_startup(&producer);
     rt_thread_startup(&consumer);
 
-    while (1)
-    {
+    //while (1)
+    //{
 
         // These are the raw numbers from the chip, so will need tweaking to be really useful.
         // See the datasheet for more information
@@ -144,5 +167,5 @@ int main(void)
         // Note this is chip temperature.
         //rt_kprintf("Temp. = %d\n", (temp / 340.0) + 36.53);
 
-    }
+    //}
 }

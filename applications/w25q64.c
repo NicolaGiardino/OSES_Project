@@ -12,10 +12,10 @@ INIT_COMPONENT_EXPORT(rt_hw_spi_flash_init);
 
 int w25q64_init()
 {
-	spi_device = (struct rt_spi_device *)rt_device_find("spi10");
+	spi_device = (struct rt_spi_device *)rt_device_find("w25q64");
 	if (!spi_device)
 	{
-		rt_kprintf("spi sample run failed! can't find %s device!\n", "spi10");
+		rt_kprintf("spi sample run failed! can't find %s device!\n", "w25q64");
 		return -RT_ENOSYS;
 	}
 	else
