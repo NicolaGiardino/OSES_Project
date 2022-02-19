@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2021, RT-Thread Development Team
+ * Copyright (c) 2006-2018, RT-Thread Development Team
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -13,7 +13,10 @@
 
 #include <rtthread.h>
 #include <rtdevice.h>
+
+#ifndef _WIN32
 #include <sys/time.h>
+#endif
 
 #define RT_RTC_YEARS_MAX         137
 #ifdef RT_USING_SOFT_RTC
@@ -95,8 +98,8 @@ static void alarm_wakeup(struct rt_alarm *alarm, struct tm *now)
         {
         case RT_ALARM_ONESHOT:
         {
-            sec_alarm = timegm(&alarm->wktime);
-            sec_now = timegm(now);
+            sec_alarm = mktime(&alarm->wktime);
+            sec_now = mktime(now);
             if (((sec_now - sec_alarm) <= RT_ALARM_DELAY) && (sec_now >= sec_alarm))
             {
                 /* stop alarm */
@@ -777,7 +780,7 @@ void rt_alarm_dump(void)
     rt_kprintf("+----+---------------------+------+------+----+\n");
 }
 
-MSH_CMD_EXPORT_ALIAS(rt_alarm_dump, rt_alarm_dump, dump alarm info);
+FINSH_FUNCTION_EXPORT_ALIAS(rt_alarm_dump, __cmd_alarm_dump, dump alarm info);
 
 /** \brief initialize alarm service system
  *
@@ -790,7 +793,7 @@ int rt_alarm_system_init(void)
 
     rt_list_init(&_container.head);
     rt_event_init(&_container.event, "alarmsvc", RT_IPC_FLAG_FIFO);
-    rt_mutex_init(&_container.mutex, "alarmsvc", RT_IPC_FLAG_PRIO);
+    rt_mutex_init(&_container.mutex, "alarmsvc", RT_IPC_FLAG_FIFO);
 
     tid = rt_thread_create("alarmsvc",
                            rt_alarmsvc_thread_init, RT_NULL,

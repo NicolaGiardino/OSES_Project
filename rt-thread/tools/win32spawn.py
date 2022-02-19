@@ -24,13 +24,7 @@
 
 import os
 import threading
-import sys
-
-_PY2 = sys.version_info[0] < 3
-if _PY2:
-    import Queue
-else:
-    import queue as Queue
+import Queue
 
 # Windows import 
 import win32file

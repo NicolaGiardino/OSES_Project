@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2021, RT-Thread Development Team
+ * Copyright (c) 2006-2018, RT-Thread Development Team
  *
  * SPDX-License-Identifier: Apache-2.0
  */
@@ -61,7 +61,7 @@
 /* some statistical variable */
 #ifdef RT_MEM_STATS
 static rt_size_t used_mem, max_mem;
-#endif /* RT_MEM_STATS */
+#endif
 
 #ifdef RT_USING_HOOK
 static void (*rt_malloc_hook)(void *ptr, rt_size_t size);
@@ -74,10 +74,10 @@ static void (*rt_free_hook)(void *ptr);
 /**@{*/
 
 /**
- * @brief This function will set a hook function, which will be invoked when a memory
- *        block is allocated from heap memory.
+ * This function will set a hook function, which will be invoked when a memory
+ * block is allocated from heap memory.
  *
- * @param hook the hook function.
+ * @param hook the hook function
  */
 void rt_malloc_sethook(void (*hook)(void *ptr, rt_size_t size))
 {
@@ -86,8 +86,8 @@ void rt_malloc_sethook(void (*hook)(void *ptr, rt_size_t size))
 RTM_EXPORT(rt_malloc_sethook);
 
 /**
- * @brief This function will set a hook function, which will be invoked when a memory
- *        block is released to heap memory.
+ * This function will set a hook function, which will be invoked when a memory
+ * block is released to heap memory.
  *
  * @param hook the hook function
  */
@@ -99,7 +99,7 @@ RTM_EXPORT(rt_free_sethook);
 
 /**@}*/
 
-#endif /* RT_USING_HOOK */
+#endif
 
 /*
  * slab allocator implementation
@@ -233,11 +233,6 @@ struct rt_page_head
 static struct rt_page_head *rt_page_list;
 static struct rt_semaphore heap_sem;
 
-/**
- * @brief Alloc memory size by page.
- *
- * @param npages the number of pages.
- */
 void *rt_page_alloc(rt_size_t npages)
 {
     struct rt_page_head *b, *n;
@@ -274,13 +269,6 @@ void *rt_page_alloc(rt_size_t npages)
     return b;
 }
 
-/**
- * @brief Free memory by page.
- *
- * @param addr is the head address of first page.
- *
- * @param npages is the number of pages.
- */
 void rt_page_free(void *addr, rt_size_t npages)
 {
     struct rt_page_head *b, *n;
@@ -346,11 +334,12 @@ static void rt_page_init(void *addr, rt_size_t npages)
 }
 
 /**
- * @brief This function will init system heap.
+ * @ingroup SystemInit
  *
- * @param begin_addr the beginning address of system page.
+ * This function will init system heap
  *
- * @param end_addr the end address of system page.
+ * @param begin_addr the beginning address of system page
+ * @param end_addr the end address of system page
  */
 void rt_system_heap_init(void *begin_addr, void *end_addr)
 {
@@ -374,7 +363,7 @@ void rt_system_heap_init(void *begin_addr, void *end_addr)
     npages  = limsize / RT_MM_PAGE_SIZE;
 
     /* initialize heap semaphore */
-    rt_sem_init(&heap_sem, "heap", 1, RT_IPC_FLAG_PRIO);
+    rt_sem_init(&heap_sem, "heap", 1, RT_IPC_FLAG_FIFO);
 
     RT_DEBUG_LOG(RT_DEBUG_SLAB, ("heap[0x%x - 0x%x], size 0x%x, 0x%x pages\n",
                                  heap_start, heap_end, limsize, npages));
@@ -476,15 +465,15 @@ rt_inline int zoneindex(rt_size_t *bytes)
 /**@{*/
 
 /**
- * @brief This function will allocate a block from system heap memory.
+ * This function will allocate a block from system heap memory.
+ * - If the nbytes is less than zero,
+ * or
+ * - If there is no nbytes sized memory valid in system,
+ * the RT_NULL is returned.
  *
- * @note the RT_NULL is returned if
- *         - the nbytes is less than zero.
- *         - there is no nbytes sized memory valid in system.
+ * @param size the size of memory to be allocated
  *
- * @param size is the size of memory to be allocated.
- *
- * @return the allocated memory.
+ * @return the allocated memory
  */
 void *rt_malloc(rt_size_t size)
 {
@@ -527,7 +516,7 @@ void *rt_malloc(rt_size_t size)
         used_mem += size;
         if (used_mem > max_mem)
             max_mem = used_mem;
-#endif /* RT_MEM_STATS */
+#endif
         goto done;
     }
 
@@ -551,7 +540,7 @@ void *rt_malloc(rt_size_t size)
     {
         RT_ASSERT(z->z_nfree > 0);
 
-        /* Remove us from the zone_array[] when we become full */
+        /* Remove us from the zone_array[] when we become empty */
         if (--z->z_nfree == 0)
         {
             zone_array[zi] = z->z_next;
@@ -582,7 +571,7 @@ void *rt_malloc(rt_size_t size)
         used_mem += z->z_chunksize;
         if (used_mem > max_mem)
             max_mem = used_mem;
-#endif /* RT_MEM_STATS */
+#endif
 
         goto done;
     }
@@ -666,7 +655,7 @@ void *rt_malloc(rt_size_t size)
         used_mem += z->z_chunksize;
         if (used_mem > max_mem)
             max_mem = used_mem;
-#endif /* RT_MEM_STATS */
+#endif
     }
 
 done:
@@ -679,13 +668,12 @@ __exit:
 RTM_EXPORT(rt_malloc);
 
 /**
- * @brief This function will change the size of previously allocated memory block.
+ * This function will change the size of previously allocated memory block.
  *
- * @param ptr is the previously allocated memory block.
+ * @param ptr the previously allocated memory block
+ * @param size the new size of memory block
  *
- * @param size is the new size of memory block.
- *
- * @return the allocated memory.
+ * @return the allocated memory
  */
 void *rt_realloc(void *ptr, rt_size_t size)
 {
@@ -748,17 +736,16 @@ void *rt_realloc(void *ptr, rt_size_t size)
 RTM_EXPORT(rt_realloc);
 
 /**
- * @brief This function will contiguously allocate enough space for count objects
- *        that are size bytes of memory each and returns a pointer to the allocated
- *        memory.
+ * This function will contiguously allocate enough space for count objects
+ * that are size bytes of memory each and returns a pointer to the allocated
+ * memory.
  *
- * @note The allocated memory is filled with bytes of value zero.
+ * The allocated memory is filled with bytes of value zero.
  *
- * @param count is the number of objects to allocate.
+ * @param count number of objects to allocate
+ * @param size size of the objects to allocate
  *
- * @param size is the size of the objects to allocate.
- *
- * @return pointer to allocated memory / NULL pointer if there is an error.
+ * @return pointer to allocated memory / NULL pointer if there is an error
  */
 void *rt_calloc(rt_size_t count, rt_size_t size)
 {
@@ -776,11 +763,10 @@ void *rt_calloc(rt_size_t count, rt_size_t size)
 RTM_EXPORT(rt_calloc);
 
 /**
- * @brief This function will release the previous allocated memory block by rt_malloc.
+ * This function will release the previous allocated memory block by rt_malloc.
+ * The released memory block is taken back to system heap.
  *
- * @note The released memory block is taken back to system heap.
- *
- * @param ptr is the address of memory which will be released
+ * @param ptr the address of memory which will be released
  */
 void rt_free(void *ptr)
 {
@@ -804,7 +790,7 @@ void rt_free(void *ptr)
                       (rt_ubase_t)addr,
                       ((rt_ubase_t)(addr) - heap_start) >> RT_MM_PAGE_BITS));
     }
-#endif /* RT_DEBUG_SLAB */
+#endif
 
     kup = btokup((rt_ubase_t)ptr & ~RT_MM_PAGE_MASK);
     /* release large allocation */
@@ -820,7 +806,7 @@ void rt_free(void *ptr)
 
 #ifdef RT_MEM_STATS
         used_mem -= size * RT_MM_PAGE_SIZE;
-#endif /* RT_MEM_STATS */
+#endif
         rt_sem_release(&heap_sem);
 
         RT_DEBUG_LOG(RT_DEBUG_SLAB,
@@ -847,7 +833,7 @@ void rt_free(void *ptr)
 
 #ifdef RT_MEM_STATS
     used_mem -= z->z_chunksize;
-#endif /* RT_MEM_STATS */
+#endif
 
     /*
      * Bump the number of free chunks.  If it becomes non-zero the zone
@@ -919,16 +905,6 @@ void rt_free(void *ptr)
 RTM_EXPORT(rt_free);
 
 #ifdef RT_MEM_STATS
-/**
-* @brief This function will caculate the total memory, the used memory, and
-*        the max used memory.
-*
-* @param total is a pointer to get the total size of the memory.
-*
-* @param used is a pointer to get the size of memory used.
-*
-* @param max_used is a pointer to get the maximum memory used.
-*/
 void rt_memory_info(rt_uint32_t *total,
                     rt_uint32_t *used,
                     rt_uint32_t *max_used)
@@ -953,9 +929,9 @@ void list_mem(void)
     rt_kprintf("maximum allocated memory: %d\n", max_mem);
 }
 FINSH_FUNCTION_EXPORT(list_mem, list memory usage information)
-#endif /* RT_USING_FINSH */
-#endif /* RT_MEM_STATS */
+#endif
+#endif
 
 /**@}*/
 
-#endif /* defined (RT_USING_HEAP) && defined (RT_USING_SLAB) */
+#endif

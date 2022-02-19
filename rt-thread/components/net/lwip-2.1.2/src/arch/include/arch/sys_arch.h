@@ -39,9 +39,7 @@
 
 #include <rtthread.h>
 
-#ifdef RT_USING_BIG_ENDIAN
-#define BYTE_ORDER BIG_ENDIAN
-#else
+#ifndef BYTE_ORDER
 #define BYTE_ORDER LITTLE_ENDIAN
 #endif
 

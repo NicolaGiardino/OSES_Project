@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006-2021, RT-Thread Development Team
+ * Copyright (c) 2006-2018, RT-Thread Development Team
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -58,11 +58,7 @@ extern "C" {
 #endif /* RT_USING_USB_HOST */
 
 #ifdef RT_USING_SERIAL
-#ifdef RT_USING_SERIAL_V2
-#include "drivers/serial_v2.h"
-#else
 #include "drivers/serial.h"
-#endif
 #endif /* RT_USING_SERIAL */
 
 #ifdef RT_USING_I2C
@@ -83,76 +79,70 @@ extern "C" {
 #include "drivers/mmcsd_core.h"
 #include "drivers/sd.h"
 #include "drivers/sdio.h"
-#endif /* RT_USING_SDIO */
-
+#endif
 
 #ifdef RT_USING_WDT
 #include "drivers/watchdog.h"
-#endif /* RT_USING_WDT */
+#endif
 
 #ifdef RT_USING_PIN
 #include "drivers/pin.h"
-#endif /* RT_USING_PIN */
-
-#ifdef RT_USING_SENSOR
-#include "drivers/sensor.h"
-#endif /* RT_USING_SENSOR */
+#endif
 
 #ifdef RT_USING_CAN
 #include "drivers/can.h"
-#endif /* RT_USING_CAN */
+#endif
 
 #ifdef RT_USING_HWTIMER
 #include "drivers/hwtimer.h"
-#endif /* RT_USING_HWTIMER */
+#endif
 
 #ifdef RT_USING_AUDIO
 #include "drivers/audio.h"
-#endif /* RT_USING_AUDIO */
+#endif
 
 #ifdef RT_USING_CPUTIME
 #include "drivers/cputime.h"
-#endif /* RT_USING_CPUTIME */
+#endif
 
 #ifdef RT_USING_ADC
 #include "drivers/adc.h"
-#endif /* RT_USING_ADC */
+#endif
 
 #ifdef RT_USING_DAC
 #include "drivers/dac.h"
-#endif /* RT_USING_DAC */
+#endif
 
 #ifdef RT_USING_PWM
 #include "drivers/rt_drv_pwm.h"
-#endif /* RT_USING_PWM */
+#endif
 
 #ifdef RT_USING_PM
 #include "drivers/pm.h"
-#endif /* RT_USING_PM */
+#endif
 
 #ifdef RT_USING_WIFI
 #include "drivers/wlan.h"
-#endif /* RT_USING_WIFI */
+#endif
 
 #ifdef MTD_USING_NOR
 #include "drivers/mtdnor.h"
-#endif /* MTD_USING_NOR */
-
+#endif
 #ifdef MTD_USING_NAND
 #include "drivers/mtdnand.h"
-#endif /* MTD_USING_NAND */
+#endif
 
 #ifdef RT_USING_HWCRYPTO
 #include "drivers/crypto.h"
-#endif /* RT_USING_HWCRYPTO */
+#endif
 
 #ifdef RT_USING_PULSE_ENCODER
 #include "drivers/pulse_encoder.h"
-#endif /* RT_USING_PULSE_ENCODER */
+#endif
 
 #ifdef RT_USING_INPUT_CAPTURE
 #include "drivers/rt_inputcapture.h"
-#endif /* RT_USING_INPUT_CAPTURE */
+#endif
 
 #ifdef __cplusplus
 }
