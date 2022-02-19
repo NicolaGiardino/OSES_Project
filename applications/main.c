@@ -10,6 +10,7 @@
 
 #include <rtthread.h>
 #include <rtdevice.h>
+#include <rthw.h>
 #include "pico/stdlib.h"
 #include "pico/binary_info.h"
 #include "../Benchmark/XenoJetBench.h"
@@ -112,9 +113,19 @@ static void mpu6050_read_raw(int16_t accel[3], int16_t gyro[3], int16_t *temp)
     *temp = buffer[0] << 8 | buffer[1];
 }
 
+void demo_nw_isr(int vector, void *param) // vector == 0 && param == tmp
+{
+    /* TOP HALF: read hardware status and request control of needed shared resource(s) */
+    // rt_mutex_take(mutex, time) <- for reference
+
+    /* Data processing & other operations... */
+
+    /* Release any shared resource and get ready to start BOTTOM HALF */
+    // rt_mutex_release(mutex) <- for reference
+}
+
 int main(void)
 {
-    xeno_main();
     rt_kprintf("Hello, RT-Thread!\n");
 
     rt_pin_mode(LED_PIN, PIN_MODE_OUTPUT);
@@ -140,6 +151,12 @@ int main(void)
     mpu6050_reset();
 
     int16_t acceleration[3], gyro[3], temp;
+    int tmp = 3;
+    xeno_main();
+
+    rt_hw_interrupt_init(); // initialize interrupts
+    // mount demo_nw_isr() as interrupt handler number 0 called "button_irq" passing "tmp" as parameter:
+    rt_hw_interrupt_install(0, demo_nw_isr, (void *)tmp, "button_irq");
 
     while (1)
     {
