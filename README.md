@@ -1,7 +1,20 @@
 # OSES_Project
 
-MPU6050 Library: https://github.com/raspberrypi/pico-examples/tree/master/i2c/mpu6050_i2c
+Pull the repository using GitHub Desktop or the commands:
 
-SD Card Module Linrary: https://github.com/raspberrypi/pico-extras/tree/master/src/rp2_common/pico_sd_card
+```sh
+$ git clone https://github.com/NicolaGiardino/OSES_Project
+$ git checkout beta
+$ git submodule init
+$ git submodule update
+```
 
-Benchmark Library: https://github.com/ArsalanShahid116/XenoJetBench
+Describe in each commit what's been done, updating the file CHANGES.md
+
+The changes should be described with the format:
+
+```sh
+| Name Surname | Date | Commit no.00 | Description |
+```
+
+Happy coding
