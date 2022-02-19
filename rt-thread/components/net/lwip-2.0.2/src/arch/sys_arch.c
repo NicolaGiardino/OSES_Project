@@ -1,5 +1,5 @@
 /*
- * COPYRIGHT (C) 2006-2018, RT-Thread Development Team
+ * COPYRIGHT (C) 2006-2021, RT-Thread Development Team
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -352,7 +352,7 @@ err_t sys_mutex_new(sys_mutex_t *mutex)
     rt_snprintf(tname, RT_NAME_MAX, "%s%d", SYS_LWIP_MUTEX_NAME, counter);
     counter ++;
 
-    tmpmutex = rt_mutex_create(tname, RT_IPC_FLAG_FIFO);
+    tmpmutex = rt_mutex_create(tname, RT_IPC_FLAG_PRIO);
     if (tmpmutex == RT_NULL)
         return ERR_MEM;
     else

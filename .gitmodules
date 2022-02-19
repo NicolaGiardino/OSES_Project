@@ -7,6 +7,3 @@
 [submodule "libraries/picoprobe"]
 	path = libraries/picoprobe
 	url = https://github.com/raspberrypi/picoprobe.git
-[submodule "libraries/no-OS-FatFS-SD-SPI-RPi-Pico"]
-	path = libraries/no-OS-FatFS-SD-SPI-RPi-Pico
-	url = https://github.com/carlk3/no-OS-FatFS-SD-SPI-RPi-Pico.git

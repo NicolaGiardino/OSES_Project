@@ -14,14 +14,13 @@ config PKGS_DIR
     string
     option env="PKGS_ROOT"
     default "packages"
-
+ 
 source "$RTT_DIR/Kconfig"
 source "$PKGS_DIR/Kconfig"
-source "$PKGS_DIR/packages/misc/samples/Kconfig"
 
-config RT_STUDIO_BUILT_IN
+config SOC_RP2040
     bool
-    select ARCH_ARM_CORTEX_M7
+    select ARCH_ARM_CORTEX_M0
     select RT_USING_COMPONENTS_INIT
     select RT_USING_USER_MAIN
     default y
