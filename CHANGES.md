@@ -12,3 +12,4 @@ Changes:
 | Nicola di Gruttola Giardino | Feb 16 '22 | Commit 6 | Changed functions of periodic tasks into the equivalent for RT-Thread - Implemented time elapsed functions |
 | Fulvio castello | Feb 16 '22 | Commit 7 | Made linking XenoJetBench.h possible thanks to improved SCons implementation - work on OpenMP library still needed to compile correctly |
 | Fulvio Castello | Feb 17 '22 | Commit 8 | Apparently eliminated parallel threads support (needs testing for definitive commented code removal); adjusted a lot of console outputs formatting and timing variables types; fixed warning inside deferrable server source code & improved engine selection via a switch statement |
+| Fulvio Castello | Feb 19 '22 | Commit 9| Tidied-up benchmark code (needs final testing for functionality) & rendered engine selection automatic + (pseudo)random |
