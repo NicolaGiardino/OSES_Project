@@ -6,8 +6,6 @@
 #include <board.h>
 #include "drv_soft_i2c.h"
 
-static int addr = 0x68;
-
 struct rt_i2c_bus_device *i2c_device;
 
 void mpu6050_init(char *dev_name);
