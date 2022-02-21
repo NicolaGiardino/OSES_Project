@@ -4,9 +4,7 @@ Pull the repository using GitHub Desktop or the commands:
 
 ```sh
 $ git clone https://github.com/NicolaGiardino/OSES_Project
-$ git checkout beta
-$ git submodule init
-$ git submodule update
+$ git checkout hardware
 ```
 
 Describe in each commit what's been done, updating the file CHANGES.md
