@@ -39,15 +39,13 @@ void cleanup() {
   rt_thread_delete(&thd_calcperf);
 }
 
-/* The engine number will be chosen by using 3 pushbuttons */
-int xeno_main() {
-  uint32_t BM_Start = rt_tick_get_millisecond(), BM_End, TotalTime = 0,
-           StartTime, EndTime, ExecTime;
+int init_xeno(int16_t mod0[], int16_t mod1[], int16_t mod2[], size_t N) {
+  uint32_t BM_Start = rt_tick_get_millisecond(), BM_End, StartTime, EndTime,
+           ExecTime;
+  size_t i;
+
   rt_kprintf("XenoJetBench: An Open Source Hard-Real-Time Multiprocessor "
              "Benchmark\n\n");
-  FILE *file;
-  int i = 0, NumPoints = 0;
-  float a, b, c, d, x, pi, sum, TimePoint, step = 1.0 / (float)num_steps;
 
   create_tasks();
 
@@ -74,72 +72,33 @@ int xeno_main() {
   }
 
   rt_kprintf(" ==> Starting XenoJetBench Execution \n\n");
+
   // header for results
   rt_kprintf("ExecTime, "
              "Spd|Alt|Thr|Mach|Press|Temp|Fnet|Fgros|RamDr|FlFlo|TSFC|Airfl|"
              "Weight|Fn/W\n");
 
-  // open the Inputs file
-  file = fopen("input.txt", "r");
+  for (i = 0; i < N; ++i) {
+    //********* PARSE INPUTS **********
+    u0d = mod0[i];
+    altd = mod1[i];
+    throtl = mod2[i];
 
-  // read line by line
-  while (!feof(file)) {
-    for (i = 0; i < num_steps; i++) {
-      x = (i + 0.5) * step;
-      sum += 4.0 / (1.0 + x * x);
-    }
-    pi = sum * step;
-    // Read a line, Speed Altitude and Throttle
-    fscanf(file, "%f%f%f%f", &a, &b, &c, &d);
-    // Avoid the last point to be execute twice because of the while loop
-    if (!feof(file)) {
-      if (a < 0 || a > 1500) {
-        rt_kprintf("Warning : incorrect speed for point %f\n", NumPoints);
-        u0d = 0;
-      } else
-        // Input speed in mph
-        u0d = a;
-      if (b < 0 || b > 50000) {
-        rt_kprintf("Warning : incorrect altitude for point %f\n", NumPoints);
-        altd = 0;
-      } else
-        // Input altitude in feet
-        altd = b;
-      if (c < 45 || c > 90) {
-        rt_kprintf("Warning : incorrect throttle for point %f\n", NumPoints);
-        throtl = 100;
-      } else
-        // Converting input throttle in %
-        throtl = deg2rad(c, pi) * 100 * 2 / pi;
-      if (d < 0) {
-        rt_kprintf("Warning : incorrect throttle for point %f\n", NumPoints);
-        TimePoint = 0;
-      } else
-        // Input time point
-        TimePoint = d;
+    //********* START CALCULATIONS **********
+    StartTime = rt_tick_get_millisecond();
+    start_tasks();
+    EndTime = rt_tick_get_millisecond();
+    ExecTime = EndTime - StartTime;
 
-      //********* START CALCULATIONS **********
-      StartTime = rt_tick_get_millisecond();
-      start_tasks();
-      EndTime = rt_tick_get_millisecond();
-      ExecTime = (EndTime - StartTime) / 1000;
-      // Count the number of points
-      NumPoints++;
-
-      //*********** PRINT RESULTS ************
-      rt_kprintf("%7lf, "
-                 "%4.0lf|%5.0lf|%5.1lf|%5.3lf|%5.2lf|%5.1lf|%5.0lf|%5.0lf|%5."
-                 "0lf|%5.0lf|%4.2lf|%5.1lf|%6.2lf|%4.2lf\n     @ point %d\n",
-                 ExecTime, u0d, altd, throtl, fsmach, psout, tsout, fnlb, fglb,
-                 drlb, flflo, sfc, eair, weight, fnlb / weight, NumPoints);
-    } // End of if(!feof)
-  }   // End of while(!feof)
+    //*********** PRINT RESULTS ************
+    rt_kprintf("%7lf, "
+               "%4.0lf|%5.0lf|%5.1lf|%5.3lf|%5.2lf|%5.1lf|%5.0lf|%5.0lf|%5."
+               "0lf|%5.0lf|%4.2lf|%5.1lf|%6.2lf|%4.2lf\n     @ point %d\n",
+               ExecTime, u0d, altd, throtl, fsmach, psout, tsout, fnlb, fglb,
+               drlb, flflo, sfc, eair, weight, fnlb / weight, i + 1);
+  }
 
   rt_kprintf("\n==> Ending XenoJetBench Execution\n\n");
-
-  // Close the file
-  fclose(file);
-
   rt_kprintf("\n========================================================\n");
   rt_kprintf("    XenoJetBench Successfully Terminated\n\n");
 
@@ -148,12 +107,10 @@ int xeno_main() {
   rt_kprintf("    XenoJetBench Start time : %f secs\n ", BM_Start / 1000);
   BM_End = rt_tick_get_millisecond();
   rt_kprintf("   XenoJetBench End time : %f secs\n", BM_End / 1000);
-  rt_kprintf("   Total Benchmark time : %f secs\n",
-             (BM_End - BM_Start) / 1000);
+  rt_kprintf("   Total Benchmark time : %f secs\n", (BM_End - BM_Start) / 1000);
   rt_kprintf("\n========================================================\n");
   return (EXIT_SUCCESS);
 }
-//***end of main***//
 
 /* Utility to convert degree in radian */
 float deg2rad(float deg, float pi) { return (deg / 180 * pi); }

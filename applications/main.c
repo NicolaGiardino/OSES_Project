@@ -11,8 +11,10 @@
 #include <rtthread.h>
 #include <rtdevice.h>
 #include <board.h>
+#include <math.h>
 #include "MPU6050.h"
 #include "w25q64.h"
+#include "../Benchmark/XenoJetBench.h"
 
 #define DEBUG 0
 
@@ -23,8 +25,12 @@
 #define THREAD_PRIORITY     20
 #define THREAD_TIMESLICE    10
 
+#define NUM_READINGS        125
+
 rt_mutex_t mutex;
 static int16_t acc[3], gyro[3], temp;
+static int16_t acc_v[NUM_READINGS], gyro_v[NUM_READINGS], temp_v[NUM_READINGS];
+static size_t curr_read = 0;
 
 static struct rt_thread producer;
 static char producer_stack[1024];
@@ -42,11 +48,18 @@ static void producer_entry(void* parameter)
         rt_mutex_take(mutex, RT_WAITING_FOREVER);
 
         mpu6050_read_raw(acc, gyro, &temp);
+        acc_v[curr_read] = sqrt(pow(acc[0], 2) + pow(acc[1], 2) + pow(acc[2], 2));
+        gyro_v[curr_read] = sqrt(pow(gyro[0], 2) + pow(gyro[1], 2) + pow(gyro[2], 2));
+        temp_v[curr_read] = (temp / 340.0) + 36.53;
+        ++curr_read;
 
 #if DEBUG
         rt_kprintf("Acc. X = %d, Y = %d, Z = %d\n", acc[0], acc[1], acc[2]);
         rt_kprintf("Gyro. X = %d, Y = %d, Z = %d\n", gyro[0], gyro[1], gyro[2]);
-        rt_kprintf("Temp. = %d\n", (rt_int16_t)((temp / 340.0) + 36.53));
+        rt_kprintf("Temp. raw = %d\n", temp);
+        rt_kprintf("Acc. mod = %d\n", acc_v[curr_read]);
+        rt_kprintf("Gyro. mod = %d\n", gyro_v[curr_read]);
+        rt_kprintf("Temp. actual = %d\n", temp_v[curr_read]);
 #endif
 
         rt_mutex_release(mutex);
@@ -64,7 +77,12 @@ static char consumer_stack[1024];
 static void consumer_entry(void* parameter)
 {
 
-    while(1){}
+    rt_mutex_take(mutex, RT_WAITING_FOREVER);
+
+    init_xeno(acc_v, gyro_v, temp_v, NUM_READINGS);
+    curr_read = 0;
+
+    rt_mutex_release(mutex);
 
 }
 
@@ -185,7 +203,8 @@ int main(void)
     rt_thread_init(&consumer, "consumer", consumer_entry, RT_NULL, &consumer_stack[0], sizeof(consumer_stack), THREAD_PRIORITY, THREAD_TIMESLICE);
 
 
-    rt_thread_startup(&producer);
+    while (curr_read < NUM_READINGS)
+        rt_thread_startup(&producer);
     rt_thread_startup(&consumer);
 
     //while (1)
