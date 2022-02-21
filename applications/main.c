@@ -32,6 +32,24 @@ static int16_t acc[3], gyro[3], temp;
 static int16_t acc_v[NUM_READINGS], gyro_v[NUM_READINGS], temp_v[NUM_READINGS];
 static size_t curr_read = 0;
 
+uint16_t int_sqrt32(uint32_t x)
+{
+    uint16_t res=0;
+    uint16_t add= 0x8000;
+    int i;
+    for(i=0;i<16;i++)
+    {
+        uint16_t temp=res | add;
+        uint32_t g2=temp*temp;
+        if (x>=g2)
+        {
+            res=temp;
+        }
+        add>>=1;
+    }
+    return res;
+}
+
 static struct rt_thread producer;
 static char producer_stack[1024];
 static void producer_entry(void* parameter)
@@ -48,8 +66,8 @@ static void producer_entry(void* parameter)
         rt_mutex_take(mutex, RT_WAITING_FOREVER);
 
         mpu6050_read_raw(acc, gyro, &temp);
-        acc_v[curr_read] = sqrt(pow(acc[0], 2) + pow(acc[1], 2) + pow(acc[2], 2));
-        gyro_v[curr_read] = sqrt(pow(gyro[0], 2) + pow(gyro[1], 2) + pow(gyro[2], 2));
+        acc_v[curr_read] = int_sqrt32(acc[0] * acc[0] + acc[1] * acc[1] + acc[2] * acc[2]);
+        gyro_v[curr_read] = int_sqrt32(gyro[0] * gyro[0] + gyro[1] * gyro[1] + gyro[2] * gyro [2]);
         temp_v[curr_read] = (temp / 340.0) + 36.53;
         ++curr_read;
 
@@ -79,7 +97,7 @@ static void consumer_entry(void* parameter)
 
     rt_mutex_take(mutex, RT_WAITING_FOREVER);
 
-    init_xeno(acc_v, gyro_v, temp_v, NUM_READINGS);
+    //init_xeno(acc_v, gyro_v, temp_v, NUM_READINGS);
     curr_read = 0;
 
     rt_mutex_release(mutex);
