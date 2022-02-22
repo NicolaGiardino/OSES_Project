@@ -28,6 +28,7 @@
 #define NUM_READINGS 125
 
 rt_mutex_t mutex;
+static rt_uint32_t addr = 0x00;
 static int16_t acc[3], gyro[3], temp;
 static float acc_v[NUM_READINGS], gyro_v[NUM_READINGS], temp_v[NUM_READINGS];
 static size_t curr_read = 0;
@@ -84,16 +85,12 @@ static void consumer_entry(void *parameter) {
 }
 
 void write_mem_async() {
-  static rt_uint32_t addr = 0x00;
   static uint8_t addr8[3];
-
   static rt_uint8_t acc8[6], gyro8[6], temp8[2];
-
-  int i;
 
   rt_mutex_take(mutex, RT_WAITING_FOREVER);
 
-  int j = 0;
+  int i, j = 0;
 
   for (i = 0; i < 3; i++) {
     acc8[j] = (rt_uint8_t)acc[i];
@@ -136,8 +133,13 @@ void write_mem_async() {
   rt_kprintf("Wrote temp data on FLASH\n");
 #endif
 
-  addr += 0x01;
+  rt_mutex_release(mutex);
+}
 
+void read_mem_async() {
+  rt_mutex_take(mutex, RT_WAITING_FOREVER);
+
+  addr += 0x01;
   rt_thread_mdelay(1000);
 
   rt_uint8_t a[3] = {0x00, 0x00, 0x00};
@@ -154,22 +156,24 @@ void write_mem_async() {
   rt_mutex_release(mutex);
 }
 
-void turn_on_led_irq() {
-  static int led = 0;
+void button_async_handler() {
+  static uint8_t RWn =
+      0; /* alternate between writing (first) and reading (after) */
+
+  RWn ? read_mem_async() : write_mem_async(); /* perform asynchronous action */
 
 #if DEBUG
-  rt_kprintf("IRQ\n");
+  rt_kprintf("IRQ happened\n");
 #endif
 
-  rt_pin_write(LED_PIN, led);
-
-  led = !led;
+  RWn ^= 1; /* invert selection */
 }
 
 int main(void) {
   rt_kprintf("Hello, RT-Thread!\n");
 
-  /*int i = w25q64_init();
+  /*
+  int i = w25q64_init();
   if(i)
   {
       rt_kprintf("Error on spi device");
@@ -177,14 +181,14 @@ int main(void) {
   }
 
   w25q64_control(CHIP_ERASE, RT_NULL, RT_NULL, RT_NULL);
-*/
+  */
 
   rt_pin_mode(LED_PIN, PIN_MODE_OUTPUT);
 
   rt_pin_mode(PUSHBUTTON, PIN_MODE_INPUT);
 
-  rt_pin_attach_irq(PUSHBUTTON, PIN_IRQ_MODE_RISING, (void *)&turn_on_led_irq,
-                    RT_NULL);
+  rt_pin_attach_irq(PUSHBUTTON, PIN_IRQ_MODE_RISING,
+                    (void *)&button_async_handler, RT_NULL);
 
   rt_pin_irq_enable(PUSHBUTTON, PIN_IRQ_ENABLE);
 
