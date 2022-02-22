@@ -19,3 +19,4 @@ Changes:
 | Nicola di Gruttola Giardino | Feb 20 '22 | Commit 12 | Implemented working ISR |
 | Fulvio Castello | Feb 22 '22 | Commit 13 | Adapted XenoJetBench for reading from filestructure instead of external file, then implemented its thread inside the main function with mutex controlling capabilities; firther code cleanup |
 | Fulvio Castello | Feb 22 '22 | Commit 14 | Performed final code cleanup and implementation for XenoJetBench-related thread to test on a non-parallel architecture; also removed unused files |
+| Fulvio CAstello | Feb 22 '22 | Commit 15 | Created a separate method for reading from memory after writing - completely reworked the custom IRQ for the the pushbutton to control the mass storage |
