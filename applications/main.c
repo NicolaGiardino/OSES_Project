@@ -72,14 +72,15 @@ static void producer_entry(void *parameter) {
 static struct rt_thread consumer;
 static char consumer_stack[1024];
 static void consumer_entry(void *parameter) {
+  while (1) {
+    rt_mutex_take(mutex, RT_WAITING_FOREVER);
 
-  rt_mutex_take(mutex, RT_WAITING_FOREVER);
+    init_xeno(acc_v, gyro_v, temp_v, NUM_READINGS);
 
-  init_xeno(acc_v, gyro_v, temp_v, NUM_READINGS);
+    curr_read = 0;
 
-  curr_read = 0;
-
-  rt_mutex_release(mutex);
+    rt_mutex_release(mutex);
+  }
 }
 
 void write_mem_async() {
@@ -110,6 +111,7 @@ void write_mem_async() {
   addr8[1] = (rt_uint8_t)(addr << 8);
   addr8[2] = (rt_uint8_t)(addr << 16);
   w25q64_control(PAGE_PROGRAM, addr8, 6, acc8);
+
 #if DEBUG
   rt_kprintf("Wrote acc data on FLASH\n");
 #endif
@@ -119,6 +121,7 @@ void write_mem_async() {
   addr8[1] = (rt_uint8_t)(addr << 8);
   addr8[2] = (rt_uint8_t)(addr << 16);
   w25q64_control(PAGE_PROGRAM, addr8, 6, gyro8);
+
 #if DEBUG
   rt_kprintf("Wrote gyro data on FLASH\n");
 #endif
@@ -128,6 +131,7 @@ void write_mem_async() {
   addr8[2] = (rt_uint8_t)(addr << 16);
   addr += 0x03;
   w25q64_control(PAGE_PROGRAM, addr8, 2, temp8);
+
 #if DEBUG
   rt_kprintf("Wrote temp data on FLASH\n");
 #endif
@@ -174,6 +178,7 @@ int main(void) {
 
   w25q64_control(CHIP_ERASE, RT_NULL, RT_NULL, RT_NULL);
 */
+
   rt_pin_mode(LED_PIN, PIN_MODE_OUTPUT);
 
   rt_pin_mode(PUSHBUTTON, PIN_MODE_INPUT);
