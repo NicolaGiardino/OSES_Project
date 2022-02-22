@@ -4,7 +4,7 @@ Changes:
 | Name | Date | Commit no. | Description |
 |:----:|:----:|:----------:|:-----------:|
 | Nicola di Gruttola Giardino | Dec 9 '21 through Feb 4 '22 | Commit fbbe87 to 6ce866e | Added everything needed for the project, began modifying the benchmark, uploaded completed DefServ |
-| Fulvio Castello | Feb 8 '22 | Commit 1 | Replaced pointers with arrays [obsolete] & added top comment for verified line |
+| Fulvio Castello | Feb 8 '22 | Commit 1 | Replaced pointers with arrays [deprecated] & added top comment for verified line [unused] |
 | Nicola di Gruttola Giardino | Feb 10 '22 | Commit 2 | Added xeno functions into the header and into the main |
 | Nicola di Gruttola Giardino | Feb 10 '22 | Commit 3 | Tested LED and Pushbutton, implemented reading accelerometer (To test) |
 | Fulvio Castello | Feb 10 '22 | Commit 4 | Heavily modified several methods inside benchmark and added TODO list (for future reference) |
@@ -17,3 +17,4 @@ Changes:
 | Nicola di Gruttola Giardino | Feb 19 '22 | Commit 10 | Implemented all libraries for hardware, first body of the final program implemented |
 | Fulvio Castello | Feb 20 '22 | Commit 11 | Added very primitive implementation of interrupts: not linking correctly because of a lack of the right CSP (the required methods are defined but not actually implemented for the Cortex M0) |
 | Nicola di Gruttola Giardino | Feb 20 '22 | Commit 12 | Implemented working ISR |
+| Fulvio Castello | Feb 22 '22 | Commit 13 | Adapted XenoJetBench for reading from filestructure instead of external file, then implemented its thread inside the main function with mutex controlling capabilities; firther code cleanup |
