@@ -8,7 +8,7 @@
 
 // main
 int engine;
-int init_xeno(int16_t mod0[], int16_t mod1[], int16_t mod2[], size_t N);
+int init_xeno(float mod0[], float mod1[], float mod2[], size_t N);
 
 // methods
 float getGama(float temp);
@@ -21,8 +21,7 @@ void deduceInputs();
 void getThermo();
 void calcPerf();
 void getGeo();
-float deg2rad(float deg, float pi);
-float sqroot(float numb1er);
+float sqroot(float number);
 float xfabs(float x);
 float xlog(float x);
 float expo(float x);

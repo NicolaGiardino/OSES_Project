@@ -39,9 +39,9 @@ void cleanup() {
   rt_thread_delete(&thd_calcperf);
 }
 
-int init_xeno(int16_t mod0[], int16_t mod1[], int16_t mod2[], size_t N) {
-  uint32_t BM_Start = rt_tick_get_millisecond(), BM_End, StartTime, EndTime,
-           ExecTime;
+int init_xeno(float mod0[], float mod1[], float mod2[], size_t N) {
+  uint BM_Start = rt_tick_get_millisecond(), BM_End, StartTime, EndTime,
+       ExecTime;
   size_t i;
 
   rt_kprintf("XenoJetBench: An Open Source Hard-Real-Time Multiprocessor "
@@ -91,11 +91,12 @@ int init_xeno(int16_t mod0[], int16_t mod1[], int16_t mod2[], size_t N) {
     ExecTime = EndTime - StartTime;
 
     //*********** PRINT RESULTS ************
-    rt_kprintf("%7lf, "
-               "%4.0lf|%5.0lf|%5.1lf|%5.3lf|%5.2lf|%5.1lf|%5.0lf|%5.0lf|%5."
-               "0lf|%5.0lf|%4.2lf|%5.1lf|%6.2lf|%4.2lf\n     @ point %d\n",
-               ExecTime, u0d, altd, throtl, fsmach, psout, tsout, fnlb, fglb,
-               drlb, flflo, sfc, eair, weight, fnlb / weight, i + 1);
+    rt_kprintf("%d, "
+               "%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d\n     @ point %d\n",
+               ExecTime, (int)u0d, (int)altd, (int)throtl, (int)fsmach,
+               (int)psout, (int)tsout, (int)fnlb, (int)fglb, (int)drlb,
+               (int)flflo, (int)sfc, (int)eair, (int)weight,
+               (int)(fnlb / weight), i + 1);
   }
 
   rt_kprintf("\n==> Ending XenoJetBench Execution\n\n");
@@ -104,16 +105,15 @@ int init_xeno(int16_t mod0[], int16_t mod1[], int16_t mod2[], size_t N) {
 
   cleanup();
 
-  rt_kprintf("    XenoJetBench Start time : %f secs\n ", BM_Start / 1000);
+  rt_kprintf("    XenoJetBench Start time : %d secs\n ",
+             (int)(BM_Start / 1000));
   BM_End = rt_tick_get_millisecond();
-  rt_kprintf("   XenoJetBench End time : %f secs\n", BM_End / 1000);
-  rt_kprintf("   Total Benchmark time : %f secs\n", (BM_End - BM_Start) / 1000);
+  rt_kprintf("   XenoJetBench End time : %d secs\n", (int)(BM_End / 1000));
+  rt_kprintf("   Total Benchmark time : %d secs\n",
+             (int)((BM_End - BM_Start) / 1000));
   rt_kprintf("\n========================================================\n");
   return (EXIT_SUCCESS);
 }
-
-/* Utility to convert degree in radian */
-float deg2rad(float deg, float pi) { return (deg / 180 * pi); }
 
 /* Utility to get gamma as a function of temperature */
 float getGama(float temp) {
@@ -596,7 +596,7 @@ void getGeo() {
 float sqroot(float number) {
   float x0, x, prec = 1;
   if (number < 0) {
-    printf("Error sqroot\n");
+    printf("Error sqroot undefined\n");
     return (0);
   }
   x = (1 + number) / 2;
