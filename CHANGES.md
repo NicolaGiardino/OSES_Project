@@ -13,3 +13,4 @@ Changes:
 | Fulvio castello | Feb 16 '22 | Commit 7 | Made linking XenoJetBench.h possible thanks to improved SCons implementation - work on OpenMP library still needed to compile correctly |
 | Fulvio Castello | Feb 17 '22 | Commit 8 | Apparently eliminated parallel threads support (needs testing for definitive commented code removal); adjusted a lot of console outputs formatting and timing variables types; fixed warning inside deferrable server source code & improved engine selection via a switch statement |
 | Fulvio Castello | Feb 19 '22 | Commit 9| Tidied-up benchmark code (needs final testing for functionality) & rendered engine selection automatic + (pseudo)random |
+| Nicolò Carpentieri | Feb 23 '22 | Commit 10| Created new variable for printing final temperature inside main() function |
