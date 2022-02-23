@@ -140,18 +140,18 @@ int main(void)
     mpu6050_reset();
 
     int16_t acceleration[3], gyro[3], temp;
-
+    float temp_final;
     while (1)
     {
         mpu6050_read_raw(acceleration, gyro, &temp);
-
+        temp_final = temp / 340.0 + 36.53;
         // These are the raw numbers from the chip, so will need tweaking to be really useful.
         // See the datasheet for more information
         rt_kprintf("Acc. X = %d, Y = %d, Z = %d\n", acceleration[0], acceleration[1], acceleration[2]);
         rt_kprintf("Gyro. X = %d, Y = %d, Z = %d\n", gyro[0], gyro[1], gyro[2]);
         // Temperature is simple so use the datasheet calculation to get deg C.
         // Note this is chip temperature.
-        rt_kprintf("Temp. = %f\n", (temp / 340.0) + 36.53);
+        rt_kprintf("Temp. = %f\n", temp_final);
 
         rt_thread_mdelay(100);
     }
