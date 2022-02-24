@@ -10,8 +10,7 @@
 
 #define period 0.001 /* default T for periodic tasks */
 
-static struct rt_thread thd_deduceinputs, thd_getthermo, thd_getgeo,
-    thd_calcperf;
+static struct rt_thread thd_deduceinputs, thd_getthermo, thd_getgeo, thd_calcperf;
 static rt_uint8_t rt_thd_stack[4][2048];
 
 void create_tasks() {
@@ -576,7 +575,7 @@ void getGeo() {
 float sqroot(float number) {
   float x0, x, prec = 1;
   if (number < 0) {
-    printf("Error: sqrt undefined\n");
+    rt_kprintf("Error: sqrt undefined\n");
     return (0);
   }
   x = (1 + number) / 2;
@@ -594,7 +593,7 @@ float xlog(float x) {
   float number = 0, coeff = -1;
   int i = 1;
   if (x <= 0) {
-    printf("Error: log undefined\n");
+    rt_kprintf("Error: log undefined\n");
     return 0;
   }
   if (x == 1)
@@ -630,7 +629,7 @@ float fpow(float x, float y) {
   int partieEntiere = y;
   // If x<0 and y not integer
   if (x < 0 && (float)partieEntiere != y) {
-    printf("Error: power undefined\n");
+      rt_kprintf("Error: power undefined\n");
     return 0;
   }
   // If x<0 and y integer
