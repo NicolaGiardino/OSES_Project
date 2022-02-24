@@ -10,7 +10,8 @@
 
 #define period 0.001 /* default T for periodic tasks */
 
-static struct rt_thread thd_deduceinputs, thd_getthermo, thd_getgeo, thd_calcperf;
+static struct rt_thread thd_deduceinputs, thd_getthermo, thd_getgeo,
+    thd_calcperf;
 static rt_uint8_t rt_thd_stack[4][2048];
 
 void create_tasks() {
@@ -629,7 +630,7 @@ float fpow(float x, float y) {
   int partieEntiere = y;
   // If x<0 and y not integer
   if (x < 0 && (float)partieEntiere != y) {
-      rt_kprintf("Error: power undefined\n");
+    rt_kprintf("Error: power undefined\n");
     return 0;
   }
   // If x<0 and y integer

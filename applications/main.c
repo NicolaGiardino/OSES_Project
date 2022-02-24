@@ -18,16 +18,12 @@
 int main(void) {
   rt_kprintf("Hello, RT-Thread!\n");
 
-
-  int i = w25q64_init();
-  if(i)
-  {
-      rt_kprintf("Error on spi device");
-      return -RT_ERROR;
+  if (w25q64_init()) {
+    rt_kprintf("Error on spi device");
+    return -RT_ERROR;
   }
 
   w25q64_control(CHIP_ERASE, RT_NULL, RT_NULL, RT_NULL);
-
 
   rt_pin_mode(LED_PIN, PIN_MODE_OUTPUT);
 
@@ -54,10 +50,10 @@ int main(void) {
   }
 
   bench_mutex = rt_mutex_create("bench_mutex", RT_IPC_FLAG_FIFO);
-    if (bench_mutex == RT_NULL) {
-      rt_kprintf("create bench mutex failed.\n");
-      return -1;
-    }
+  if (bench_mutex == RT_NULL) {
+    rt_kprintf("create bench mutex failed.\n");
+    return -1;
+  }
 
   rt_thread_init(&producer, "producer", producer_entry, RT_NULL,
                  &producer_stack[0], sizeof(producer_stack), THREAD_PRIORITY,
