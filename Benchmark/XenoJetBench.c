@@ -10,8 +10,7 @@
 
 #define period 0.001 /* default T for periodic tasks */
 
-static struct rt_thread thd_deduceinputs, thd_getthermo, thd_getgeo,
-    thd_calcperf;
+static struct rt_thread thd_deduceinputs, thd_getthermo, thd_getgeo, thd_calcperf;
 static rt_uint8_t rt_thd_stack[4][2048];
 
 void create_tasks() {
