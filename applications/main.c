@@ -34,14 +34,12 @@ int main(void) {
 
   rt_pin_irq_enable(PUSHBUTTON_RAW, PIN_IRQ_ENABLE);
 
-  /*
   rt_pin_mode(PUSHBUTTON_BENCH, PIN_MODE_INPUT);
 
   rt_pin_attach_irq(PUSHBUTTON_BENCH, PIN_IRQ_MODE_RISING,
                     (void *)&button_bench_async_handler, RT_NULL);
 
   rt_pin_irq_enable(PUSHBUTTON_BENCH, PIN_IRQ_ENABLE);
-  */
 
   raw_mutex = rt_mutex_create("raw_mutex", RT_IPC_FLAG_FIFO);
   if (raw_mutex == RT_NULL) {
@@ -60,7 +58,7 @@ int main(void) {
                  THREAD_TIMESLICE);
 
   rt_thread_init(&consumer, "consumer", consumer_entry, RT_NULL,
-                 &consumer_stack[0], sizeof(consumer_stack), THREAD_PRIORITY,
+                 &consumer_stack[0], sizeof(consumer_stack), THREAD_PRIORITY - 5,
                  THREAD_TIMESLICE);
 
   rt_thread_startup(&producer);

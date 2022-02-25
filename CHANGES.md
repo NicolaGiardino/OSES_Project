@@ -21,3 +21,4 @@ Changes:
 | Fulvio Castello | Feb 22 '22 | Commit 14 | Performed final code cleanup and implementation for XenoJetBench-related thread to test on a non-parallel architecture; also removed unused files |
 | Fulvio CAstello | Feb 22 '22 | Commit 15 | Created a separate method for reading from memory after writing - completely reworked the custom IRQ for the the pushbutton to control the mass storage |
 | Nicolo' Carpentieri | Feb 24 '22 | Commit 16 | Major code adjustments, completed multithreading for first tests without DefServ |
+| Nicolo' Carpentieri | Feb 25 '22 | Commit 17 | Implemented second IRQ |
