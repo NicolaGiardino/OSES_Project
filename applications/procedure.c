@@ -6,26 +6,7 @@ static rt_uint32_t addr_bench = 0x800000;
 static size_t curr_read = 0;
 static int16_t acc[3], gyro[3], temp;
 
-<<<<<<< Updated upstream
-static void write_mem_async() {
-  static uint8_t addr8[3];
-  static rt_uint8_t acc8[6], gyro8[6], temp8[2];
-
-  rt_mutex_take(raw_mutex, RT_WAITING_FOREVER);
-
-  int i, j = 0;
-
-  for (i = 0; i < 3; i++) {
-    acc8[j] = (rt_uint8_t)acc[i];
-    gyro8[j] = (rt_uint8_t)gyro[i];
-    j++;
-    acc8[j] = (rt_uint8_t)(acc[i] << 8);
-    gyro8[j] = (rt_uint8_t)(gyro[i] << 8);
-    j++;
-  }
-=======
-<<<<<<< HEAD
-static void write_raw_mem_async()
+void write_raw_mem_async()
 {
   static uint8_t addr8[3];
   static rt_uint8_t acc8[4], gyro8[4], temp8[4];
@@ -37,22 +18,20 @@ static void write_raw_mem_async()
 
   rt_mutex_take(raw_mutex, RT_WAITING_FOREVER);
 
-  int i, j = 0;
+  acc8[0] = (rt_uint8_t)acc_v[0];
+  acc8[1] = (rt_uint8_t)((rt_uint32_t)acc_v[0] << 8);
+  acc8[2] = (rt_uint8_t)((rt_uint32_t)acc_v[0] << 16);
+  acc8[3] = (rt_uint8_t)((rt_uint32_t)acc_v[0] << 24);
 
-  acc8[0] = (rt_uint8_t)acc;
-  acc8[1] = (rt_uint8_t)(acc << 8);
-  acc8[2] = (rt_uint8_t)(acc << 16);
-  acc8[3] = (rt_uint8_t)(acc << 24);
+  gyro8[0] = (rt_uint8_t)gyro_v[0];
+  gyro8[1] = (rt_uint8_t)((rt_uint32_t)gyro_v[0] << 8);
+  gyro8[2] = (rt_uint8_t)((rt_uint32_t)gyro_v[0] << 16);
+  gyro8[3] = (rt_uint8_t)((rt_uint32_t)gyro_v[0] << 24);
 
-  gyro8[0] = (rt_uint8_t)gyro;
-  gyro8[1] = (rt_uint8_t)(gyro << 8);
-  gyro8[2] = (rt_uint8_t)(gyro << 16);
-  gyro8[3] = (rt_uint8_t)(gyro << 24);
-
-  temp8[0] = (rt_uint8_t)temp;
-  temp8[1] = (rt_uint8_t)(temp << 8);
-  temp8[3] = (rt_uint8_t)(temp << 16);
-  temp8[4] = (rt_uint8_t)(temp << 24);
+  temp8[0] = (rt_uint8_t)temp_v[0];
+  temp8[1] = (rt_uint8_t)((rt_uint32_t)temp_v[0] << 8);
+  temp8[3] = (rt_uint8_t)((rt_uint32_t)temp_v[0] << 16);
+  temp8[4] = (rt_uint8_t)((rt_uint32_t)temp_v[0] << 24);
 
   addr8[0] = (rt_uint8_t)addr;
   addr8[1] = (rt_uint8_t)(addr << 8);
@@ -84,19 +63,16 @@ static void write_raw_mem_async()
 #if DEBUG
   rt_kprintf("Wrote temp data on FLASH\n");
 #endif
->>>>>>> Stashed changes
 
-  temp8[0] = (rt_uint8_t)temp;
-  temp8[1] = (rt_uint8_t)(temp << 8);
+  rt_mutex_release(raw_mutex);
+}
 
-<<<<<<< Updated upstream
-=======
-static void read_raw_mem_async()
+void read_raw_mem_async()
 {
   rt_mutex_take(raw_mutex, RT_WAITING_FOREVER);
 
   rt_uint32_t addr32;
-  rt_uint8_t a[3] = {0x00, 0x00, 0x00};
+  rt_uint8_t addr8[3] = {0x00, 0x00, 0x00};
   rt_uint8_t rd[12];
 
   addr32 = addr - 0xC;
@@ -104,83 +80,43 @@ static void read_raw_mem_async()
   addr8[0] = (rt_uint8_t)addr32;
   addr8[1] = (rt_uint8_t)(addr32 << 8);
   addr8[2] = (rt_uint8_t)(addr32 << 16);
-  w25q64_control(READ_DATA, a, 12, rd);
-=======
-static void write_mem_async() {
-  static uint8_t addr8[3];
-  static rt_uint8_t acc8[6], gyro8[6], temp8[2];
+  w25q64_control(READ_DATA, addr8, 12, rd);
 
-  rt_mutex_take(raw_mutex, RT_WAITING_FOREVER);
+#if DEBUG
+  int i;
 
-  int i, j = 0;
->>>>>>> cdf77fb5f751a65f01587b73b8bbe6f9db3b5e62
-
-  for (i = 0; i < 3; i++) {
-    acc8[j] = (rt_uint8_t)acc[i];
-    gyro8[j] = (rt_uint8_t)gyro[i];
-    j++;
-    acc8[j] = (rt_uint8_t)(acc[i] << 8);
-    gyro8[j] = (rt_uint8_t)(gyro[i] << 8);
-    j++;
+  for (i = 0; i < 28; i += 2) {
+    rt_kprintf("%d\t", (int16_t)(rd[i]) + ((int16_t)(rd[i + 1]) >> 8));
   }
-
-  temp8[0] = (rt_uint8_t)temp;
-  temp8[1] = (rt_uint8_t)(temp << 8);
-
-<<<<<<< HEAD
-void button_raw_async_handler()
-{
-  static uint8_t RWn =
-      0; /* alternate between writing (first) and reading (after) */
-
-  RWn ? read_raw_mem_async() : write_raw_mem_async(); /* perform asynchronous action */
-=======
->>>>>>> Stashed changes
-  addr8[0] = (rt_uint8_t)addr;
-  addr8[1] = (rt_uint8_t)(addr << 8);
-  addr8[2] = (rt_uint8_t)(addr << 16);
-  w25q64_control(PAGE_PROGRAM, addr8, 6, acc8);
-<<<<<<< Updated upstream
-=======
->>>>>>> cdf77fb5f751a65f01587b73b8bbe6f9db3b5e62
->>>>>>> Stashed changes
-
-#if DEBUG
-  rt_kprintf("Wrote acc data on FLASH\n");
-#endif
-
-  addr += 0x03;
-  addr8[0] = (rt_uint8_t)addr;
-  addr8[1] = (rt_uint8_t)(addr << 8);
-  addr8[2] = (rt_uint8_t)(addr << 16);
-  w25q64_control(PAGE_PROGRAM, addr8, 6, gyro8);
-
-<<<<<<< Updated upstream
-#if DEBUG
-  rt_kprintf("Wrote gyro data on FLASH\n");
-#endif
-
-  addr8[0] = (rt_uint8_t)addr;
-  addr8[1] = (rt_uint8_t)(addr << 8);
-  addr8[2] = (rt_uint8_t)(addr << 16);
-  addr += 0x03;
-  w25q64_control(PAGE_PROGRAM, addr8, 2, temp8);
-
-#if DEBUG
-  rt_kprintf("Wrote temp data on FLASH\n");
+  rt_kprintf("\n");
 #endif
 
   rt_mutex_release(raw_mutex);
 }
 
-=======
-<<<<<<< HEAD
-static void write_bench_mem_async()
+void button_raw_async_handler()
+{
+  static uint8_t RWn = 0; /* alternate between writing (first) and reading (after) */
+
+#if USE_DEFERR
+  RWn ? rt_thread_deferrable_insert_task(&raw[1]) : rt_thread_deferrable_insert_task(&raw[0]);
+#else
+  RWn ? read_raw_mem_async() : write_raw_mem_async(); /* perform asynchronous action */
+#endif
+
+#if DEBUG
+  rt_kprintf("IRQ happened\n");
+#endif
+
+  RWn ^= 1; /* invert selection */
+}
+
+void write_bench_mem_async()
 {
   static uint8_t addr8[3];
   static rt_uint8_t res8[56];
 
-  if(addr >= 0xFFFFF4)
+  if(addr_bench >= 0xFFFFF4)
   {
       w25q64_control(CHIP_ERASE, RT_NULL, RT_NULL, RT_NULL);
   }
@@ -192,9 +128,9 @@ static void write_bench_mem_async()
   for(i = 0; i < 56; i++)
   {
       res8[i] = (rt_uint8_t)results[j];
-      res8[++i] = (rt_uint8_t)(results[j] << 8);
-      res8[++i] = (rt_uint8_t)(results[j] << 16);
-      res8[++i] = (rt_uint8_t)(results[j] << 24);
+      res8[++i] = (rt_uint8_t)((rt_uint32_t)results[j] << 8);
+      res8[++i] = (rt_uint8_t)((rt_uint32_t)results[j] << 16);
+      res8[++i] = (rt_uint8_t)((rt_uint32_t)results[j] << 24);
       j++;
   }
 
@@ -212,47 +148,23 @@ static void write_bench_mem_async()
   rt_mutex_release(raw_mutex);
 }
 
-static void read_raw_mem_async()
+void read_bench_mem_async()
 {
   rt_mutex_take(bench_mutex, RT_WAITING_FOREVER);
-=======
-#if DEBUG
-  rt_kprintf("Wrote gyro data on FLASH\n");
-#endif
-
-  addr8[0] = (rt_uint8_t)addr;
-  addr8[1] = (rt_uint8_t)(addr << 8);
-  addr8[2] = (rt_uint8_t)(addr << 16);
-  addr += 0x03;
-  w25q64_control(PAGE_PROGRAM, addr8, 2, temp8);
-
-#if DEBUG
-  rt_kprintf("Wrote temp data on FLASH\n");
-#endif
-
-  rt_mutex_release(raw_mutex);
-}
-
->>>>>>> Stashed changes
-static void read_mem_async() {
-  rt_mutex_take(raw_mutex, RT_WAITING_FOREVER);
-
-  addr += 0x01;
-  rt_thread_mdelay(1000);
->>>>>>> cdf77fb5f751a65f01587b73b8bbe6f9db3b5e62
 
   rt_uint32_t addr32;
-  rt_uint8_t a[3] = {0x00, 0x00, 0x00};
+  rt_uint8_t addr8[3] = {0x00, 0x00, 0x00};
   rt_uint8_t rd[56];
 
-  addr32 = addr - 0x38;
+  addr32 = addr_bench - 0x38;
 
   addr8[0] = (rt_uint8_t)addr32;
   addr8[1] = (rt_uint8_t)(addr32 << 8);
   addr8[2] = (rt_uint8_t)(addr32 << 16);
-  w25q64_control(READ_DATA, a, 56, rd);
+  w25q64_control(READ_DATA, addr8, 56, rd);
 
 #if DEBUG
+  int i;
   for (i = 0; i < 28; i += 2) {
     rt_kprintf("%d\t", (int16_t)(rd[i]) + ((int16_t)(rd[i + 1]) >> 8));
   }
@@ -262,28 +174,14 @@ static void read_mem_async() {
   rt_mutex_release(bench_mutex);
 }
 
-<<<<<<< Updated upstream
-void button_raw_async_handler() {
-  static uint8_t RWn =
-      0; /* alternate between writing (first) and reading (after) */
-
-  RWn ? read_mem_async() : write_mem_async(); /* perform asynchronous action */
-=======
-<<<<<<< HEAD
-void button_raw_async_handler()
+void button_bench_async_handler()
 {
-  static uint8_t RWn =
-      0; /* alternate between writing (first) and reading (after) */
-
+  static uint8_t RWn = 0; /* alternate between writing (first) and reading (after) */
+#if USE_DEFERR
+  RWn ? rt_thread_deferrable_insert_task(&bench[1]) : rt_thread_deferrable_insert_task(&bench[0]);
+#else
   RWn ? read_bench_mem_async() : write_bench_mem_async(); /* perform asynchronous action */
-=======
-void button_raw_async_handler() {
-  static uint8_t RWn =
-      0; /* alternate between writing (first) and reading (after) */
-
-  RWn ? read_mem_async() : write_mem_async(); /* perform asynchronous action */
->>>>>>> cdf77fb5f751a65f01587b73b8bbe6f9db3b5e62
->>>>>>> Stashed changes
+#endif
 
 #if DEBUG
   rt_kprintf("IRQ happened\n");
@@ -292,7 +190,8 @@ void button_raw_async_handler() {
   RWn ^= 1; /* invert selection */
 }
 
-void producer_entry(void *parameter) {
+void producer_entry(void *parameter)
+{
   mpu6050_init("i2c1");
   mpu6050_reset();
 
@@ -328,7 +227,8 @@ void producer_entry(void *parameter) {
   }
 }
 
-void consumer_entry(void *parameter) {
+void consumer_entry(void *parameter)
+{
   while (1) {
     rt_mutex_take(raw_mutex, RT_WAITING_FOREVER);
 

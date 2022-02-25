@@ -3,10 +3,10 @@
 #include <rtdevice.h>
 #include <rtthread.h>
 
-#define HIGHEST RT_THREAD_PRIORITY_MAX - 10 /* highest priority */
-#define HIGH RT_THREAD_PRIORITY_MAX - 9     /* high priority */
-#define MID RT_THREAD_PRIORITY_MAX - 8      /* medium priority */
-#define LOW RT_THREAD_PRIORITY_MAX - 7      /* low priority */
+#define HIGHEST RT_THREAD_PRIORITY_MAX - 20 /* highest priority */
+#define HIGH RT_THREAD_PRIORITY_MAX - 19     /* high priority */
+#define MID RT_THREAD_PRIORITY_MAX - 18      /* medium priority */
+#define LOW RT_THREAD_PRIORITY_MAX - 17      /* low priority */
 
 #define period 0.001 /* default T for periodic tasks */
 

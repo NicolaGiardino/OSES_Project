@@ -22,4 +22,13 @@ Changes:
 | Fulvio CAstello | Feb 22 '22 | Commit 15 | Created a separate method for reading from memory after writing - completely reworked the custom IRQ for the the pushbutton to control the mass storage |
 | Nicolo' Carpentieri | Feb 24 '22 | Commit 16 | Major code adjustments, completed multithreading for first tests without DefServ |
 | Nicolo' Carpentieri | Feb 25 '22 | Commit 17 | Implemented second IRQ |
+<<<<<<< Updated upstream
 | Nicola di Gruttola Giardino | Feb 25 '22 | Commit 18 | Added source code of Deferrable Server |
+=======
+<<<<<<< HEAD
+| Nicola di Gruttola Giardino | Feb 25 '22 | Commit 18 | Added source code of Deferrable Server |
+| Nicolo' Carpentieri | Feb 25 '22 | Commit 19 | Implemented DefServ via define, adjustments on priorities and bug fixes, ready for final tests |
+=======
+| Nicola di Gruttola Giardino | Feb 25 '22 | Commit 18 | Added source code of Deferrable Server |
+>>>>>>> e6c279833f87caeb83e7330e52f84e932bec53fe
+>>>>>>> Stashed changes

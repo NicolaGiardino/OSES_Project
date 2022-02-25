@@ -9,6 +9,7 @@
  */
 
 #include "procedure.h"
+#include <string.h>
 
 /* defined the LED0 pin: PB7 */
 #define LED_PIN GET_PIN(B, 14)
@@ -26,6 +27,28 @@ int main(void) {
   w25q64_control(CHIP_ERASE, RT_NULL, RT_NULL, RT_NULL);
 
   rt_pin_mode(LED_PIN, PIN_MODE_OUTPUT);
+
+#if USE_DEFERR
+
+  strcpy(raw[0].name, "raw write");
+  raw[0].thd_fun = write_raw_mem_async;
+  raw[0].args = RT_NULL;
+
+  strcpy(raw[1].name, "raw read");
+  raw[1].thd_fun = read_raw_mem_async;
+  raw[1].args = RT_NULL;
+
+  strcpy(bench[0].name, "bench write");
+  bench[0].thd_fun = write_bench_mem_async;
+  bench[0].args = RT_NULL;
+
+  strcpy(bench[1].name, "bench read");
+  bench[1].thd_fun = read_bench_mem_async;
+  bench[1].args = RT_NULL;
+
+  rt_thread_deferrable_init(1, 10, THREAD_PRIORITY - 3);
+
+#endif
 
   rt_pin_mode(PUSHBUTTON_RAW, PIN_MODE_INPUT);
 
@@ -58,23 +81,12 @@ int main(void) {
                  THREAD_TIMESLICE);
 
   rt_thread_init(&consumer, "consumer", consumer_entry, RT_NULL,
-                 &consumer_stack[0], sizeof(consumer_stack), THREAD_PRIORITY - 5,
+                 &consumer_stack[0], sizeof(consumer_stack), THREAD_PRIORITY - 1,
                  THREAD_TIMESLICE);
 
   rt_thread_startup(&producer);
   rt_thread_startup(&consumer);
 
   // while (1)
-  //{
-
-  // These are the raw numbers from the chip, so will need tweaking to be really
-  // useful. See the datasheet for more information
-  // rt_kprintf("Acc. X = %d, Y = %d, Z = %d\n", acceleration[0],
-  // acceleration[1], acceleration[2]); rt_kprintf("Gyro. X = %d, Y = %d, Z =
-  // %d\n", gyro[0], gyro[1], gyro[2]);
-  // Temperature is simple so use the datasheet calculation to get deg C.
-  // Note this is chip temperature.
-  // rt_kprintf("Temp. = %d\n", (temp / 340.0) + 36.53);
-
-  //}
+  //{}
 }
