@@ -2,7 +2,7 @@
 #include "../Benchmark/XenoJetBench.h"
 
 static rt_uint32_t addr = 0x00;
-static rt_uint32_t addr_bench = 0x800000;
+static rt_uint32_t addr_bench = 0xFFFFC8;
 static size_t curr_read = 0;
 static int16_t acc[3], gyro[3], temp;
 
@@ -18,6 +18,12 @@ void write_raw_mem_async()
 {
   static uint8_t addr8[3];
   static rt_uint8_t acc8[4], gyro8[4], temp8[4];
+  rt_tick_t init, end;
+  rt_int32_t total;
+
+  rt_kprintf("Inside IRQ\n");
+
+  init = rt_tick_get_millisecond();
 
   if(addr >= 0x7FFFF4)
   {
@@ -55,16 +61,17 @@ void write_raw_mem_async()
   addr8[0] = (rt_uint8_t)addr;
   addr8[1] = (rt_uint8_t)(addr << 8);
   addr8[2] = (rt_uint8_t)(addr << 16);
+
   w25q64_control(PAGE_PROGRAM, addr8, 4, gyro8);
 
 #if DEBUG
   rt_kprintf("Wrote gyro data on FLASH\n");
 #endif
 
+  addr += 0x04;
   addr8[0] = (rt_uint8_t)addr;
   addr8[1] = (rt_uint8_t)(addr << 8);
   addr8[2] = (rt_uint8_t)(addr << 16);
-  addr += 0x04;
   w25q64_control(PAGE_PROGRAM, addr8, 4, temp8);
 
   addr += 0x04;
@@ -74,6 +81,13 @@ void write_raw_mem_async()
 #endif
 
   rt_mutex_release(raw_mutex);
+
+  end = rt_tick_get_millisecond();
+
+  total = (int)(end - init);
+
+  rt_kprintf("Total time IRQ: %d\n", total);
+
 }
 
 /**
@@ -101,9 +115,11 @@ void read_raw_mem_async()
 
 #if DEBUG
   int i;
+  float read;
 
-  for (i = 0; i < 28; i += 2) {
-    rt_kprintf("%d\t", (int16_t)(rd[i]) + ((int16_t)(rd[i + 1]) >> 8));
+  for (i = 0; i < 12; i += 4) {
+    read = (float)(rd[i]) + ((float)((int)(rd[i + 1]) >> 8)) + ((float)((int)(rd[i + 1]) >> 16)) + ((float)((int)(rd[i + 1]) >> 24));
+    rt_kprintf("%d\t", (int)read);
   }
   rt_kprintf("\n");
 #endif
@@ -124,13 +140,13 @@ void button_raw_async_handler()
 {
   static uint8_t RWn = 0; /* alternate between writing (first) and reading (after) */
 
+
+  rt_kprintf("IRQ happened\n");
 #if USE_DEFERR
   RWn ? rt_thread_deferrable_insert_task(&raw[1]) : rt_thread_deferrable_insert_task(&raw[0]);
 #else
-  RWn ? read_raw_mem_async() : write_raw_mem_async(); /* perform asynchronous action */
+  //RWn ? read_raw_mem_async() : write_raw_mem_async(); /* perform asynchronous action */
 #endif
-
-  rt_kprintf("IRQ happened\n");
 
   RWn ^= 1; /* invert selection */
 }
@@ -147,6 +163,13 @@ void write_bench_mem_async()
 {
   static uint8_t addr8[3];
   static rt_uint8_t res8[56];
+
+  rt_tick_t init, end;
+  rt_int32_t total;
+
+  rt_kprintf("Inside IRQ\n");
+
+  init = rt_tick_get_millisecond();
 
   if(addr_bench >= 0xFFFFC8)
   {
@@ -178,7 +201,13 @@ void write_bench_mem_async()
   rt_kprintf("Wrote res data on FLASH\n");
 #endif
 
-  rt_mutex_release(raw_mutex);
+  rt_mutex_release(bench_mutex);
+
+  end = rt_tick_get_millisecond();
+
+  total = (int)(end - init);
+
+  rt_kprintf("Total time IRQ: %d\n", total);
 }
 
 /**
@@ -206,8 +235,11 @@ void read_bench_mem_async()
 
 #if DEBUG
   int i;
-  for (i = 0; i < 28; i += 2) {
-    rt_kprintf("%d\t", (int16_t)(rd[i]) + ((int16_t)(rd[i + 1]) >> 8));
+  float read;
+
+  for (i = 0; i < 56; i += 4) {
+    read = (float)(rd[i]) + ((float)((int)(rd[i + 1]) >> 8)) + ((float)((int)(rd[i + 1]) >> 16)) + ((float)((int)(rd[i + 1]) >> 24));
+    rt_kprintf("%d\t", (int)read);
   }
   rt_kprintf("\n");
 #endif
@@ -230,7 +262,7 @@ void button_bench_async_handler()
 #if USE_DEFERR
   RWn ? rt_thread_deferrable_insert_task(&bench[1]) : rt_thread_deferrable_insert_task(&bench[0]);
 #else
-  RWn ? read_bench_mem_async() : write_bench_mem_async(); /* perform asynchronous action */
+  //RWn ? read_bench_mem_async() : write_bench_mem_async(); /* perform asynchronous action */
 #endif
 
   rt_kprintf("IRQ happened\n");
@@ -256,9 +288,14 @@ void producer_entry(void *parameter)
   rt_kprintf("Init MPU6050 done\n");
 #endif
 
-  while (1) {
+  rt_uint32_t init_time, end_time;
+  rt_int32_t time_taken;
+
+  //while (1) {
 
     rt_kprintf("Start sampling\n");
+
+    init_time = rt_tick_get_millisecond();
 
     for (curr_read = 0; curr_read < NUM_READINGS; curr_read++) {
       rt_mutex_take(raw_mutex, RT_WAITING_FOREVER);
@@ -278,13 +315,16 @@ void producer_entry(void *parameter)
       rt_kprintf("Gyro. mod = %d\n", (int)gyro_v[curr_read]);
       rt_kprintf("Temp. actual = %d\n", (int)temp_v[curr_read]);
 #endif
-
+      //rt_thread_mdelay(1);
       rt_mutex_release(raw_mutex);
     }
+    end_time = rt_tick_get_millisecond();
+    time_taken = (rt_int32_t)(end_time - init_time);
 
-    rt_kprintf("End sampling\n");
-    rt_thread_mdelay(3000);
-  }
+    rt_kprintf("End sampling, time taken : %d\n", time_taken);
+    //rt_thread_mdelay(3000);
+
+  //}
 }
 
 /**
@@ -297,12 +337,21 @@ void producer_entry(void *parameter)
  */
 void consumer_entry(void *parameter)
 {
-  while (1) {
+  //while (1)
+  {
 
+    rt_tick_t init, end;
+    rt_int32_t time_taken;
     rt_kprintf("Start benchmark\n");
-    init_xeno();
-    rt_kprintf("End benchmark\n");
 
+    init = rt_tick_get_millisecond();
+    init_xeno();
+    end = rt_tick_get_millisecond();
+    time_taken = end - init;
+
+    rt_kprintf("End benchmark, time taken : %d\n", time_taken);
+
+    rt_thread_mdelay(3000);
 
   }
 }

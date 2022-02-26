@@ -11,10 +11,10 @@
 #define MID RT_THREAD_PRIORITY_MAX - 18      /* medium priority */
 #define LOW RT_THREAD_PRIORITY_MAX - 17      /* low priority */
 
-#define period 0.001 /* default T for periodic tasks */
+#define period 10 /* default T for periodic tasks */
 
 static struct rt_thread thd_deduceinputs, thd_getthermo, thd_getgeo, thd_calcperf;
-static rt_uint8_t rt_thd_stack[4][2048];
+static rt_uint8_t rt_thd_stack[4][1024];
 
 void create_tasks()
 {
@@ -39,22 +39,25 @@ void start_tasks()
 void cleanup()
 {
   rt_thread_delete(&thd_deduceinputs);
+  rt_kprintf("Killed 1\n");
   rt_thread_delete(&thd_getthermo);
+  rt_kprintf("Killed 2\n");
   rt_thread_delete(&thd_getgeo);
+  rt_kprintf("Killed 3\n");
   rt_thread_delete(&thd_calcperf);
+  rt_kprintf("Killed 4\n");
 }
 
 int init_xeno() {
-  uint64_t BM_Start = rt_tick_get_millisecond(), BM_End, StartTime, EndTime,
-           ExecTime;
+  rt_uint32_t BM_Start = rt_tick_get_millisecond();
+  rt_uint32_t BM_End, StartTime, EndTime;
+  rt_int32_t ExecTime;
   size_t i;
 
 #if DEBUG_XENO
   rt_kprintf("XenoJetBench: An Open Source Hard-Real-Time Multiprocessor "
              "Benchmark\n\n");
 #endif
-
-  create_tasks();
 
   // automatic engine selection
   engine = 1 + rand() % 3; /* random */
@@ -100,11 +103,17 @@ int init_xeno() {
     throtl = gyro_v[i];
     rt_mutex_release(raw_mutex);
 
+    create_tasks();
+
     //********* START CALCULATIONS **********
     StartTime = rt_tick_get_millisecond();
     start_tasks();
     EndTime = rt_tick_get_millisecond();
-    ExecTime = EndTime - StartTime;
+    ExecTime = (rt_int32_t)(EndTime - StartTime);
+
+    //rt_kprintf("Time taken : %d\n", ExecTime);
+
+    //cleanup();
 
     rt_mutex_take(bench_mutex, RT_WAITING_FOREVER);
 
@@ -142,8 +151,6 @@ int init_xeno() {
   rt_kprintf("\n========================================================\n");
   rt_kprintf("    XenoJetBench Successfully Terminated\n\n");
 #endif
-
-  cleanup();
 
 #if DEBUG_XENO
   rt_kprintf("    XenoJetBench Start time : %d secs\n ",
@@ -623,7 +630,8 @@ void getGeo() {
 float sqroot(float number) {
   float x0, x, prec = 1;
   if (number < 0) {
-    rt_kprintf("Error: sqrt undefined\n");
+    number = -number;
+    //rt_kprintf("Error: sqrt undefined\n");
     return (0);
   }
   x = (1 + number) / 2;
@@ -641,7 +649,8 @@ float xlog(float x) {
   float number = 0, coeff = -1;
   int i = 1;
   if (x <= 0) {
-    rt_kprintf("Error: log undefined\n");
+    //rt_kprintf("Error: log undefined\n");
+    x = -x;
     return 0;
   }
   if (x == 1)
@@ -675,13 +684,14 @@ float expo(float x) {
 
 float fpow(float x, float y) {
   int partieEntiere = y;
-  // If x<0 and y not integer
+  /* If x<0 and y not integer
   if (x < 0 && (float)partieEntiere != y) {
     rt_kprintf("Error: power undefined\n");
     return 0;
-  }
+  }*/
   // If x<0 and y integer
-  else if (x < 0)
+  //else
+  if (x < 0)
     return power(x, partieEntiere);
   // now x>0
   // factorize y into integer and decimal parts

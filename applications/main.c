@@ -24,7 +24,7 @@ int main(void) {
     return -RT_ERROR;
   }
 
-  w25q64_control(CHIP_ERASE, RT_NULL, RT_NULL, RT_NULL);
+  //w25q64_control(CHIP_ERASE, RT_NULL, RT_NULL, RT_NULL);
 
   rt_pin_mode(LED_PIN, PIN_MODE_OUTPUT);
 
@@ -46,7 +46,7 @@ int main(void) {
   bench[1].thd_fun = read_bench_mem_async;
   bench[1].args = RT_NULL;
 
-  rt_thread_deferrable_init(1, 10, THREAD_PRIORITY - 3);
+  rt_thread_deferrable_init(1000, 1000, THREAD_PRIORITY - 3);
 
 #endif
 
@@ -77,11 +77,11 @@ int main(void) {
   }
 
   rt_thread_init(&producer, "producer", producer_entry, RT_NULL,
-                 &producer_stack[0], sizeof(producer_stack), THREAD_PRIORITY,
+                 &producer_stack[0], sizeof(producer_stack), THREAD_PRIORITY - 1,
                  THREAD_TIMESLICE);
 
   rt_thread_init(&consumer, "consumer", consumer_entry, RT_NULL,
-                 &consumer_stack[0], sizeof(consumer_stack), THREAD_PRIORITY - 1,
+                 &consumer_stack[0], sizeof(consumer_stack), THREAD_PRIORITY,
                  THREAD_TIMESLICE);
 
   rt_thread_startup(&producer);

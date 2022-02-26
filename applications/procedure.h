@@ -1,7 +1,7 @@
 #ifndef PROCEDURE_H
 #define PROCEDURE_H
 
-#define USE_DEFERR 0
+#define USE_DEFERR 1
 
 #include "MPU6050.h"
 #include "w25q64.h"
@@ -12,8 +12,7 @@
 #include <rtdevice.h>
 #include <rtthread.h>
 
-#define DEBUG 0
-
+#define DEBUG 1
 
 #define THREAD_PRIORITY RT_THREAD_PRIORITY_MAX - 15
 #define THREAD_TIMESLICE 10
@@ -38,11 +37,11 @@ void read_bench_mem_async();
 void button_bench_async_handler();
 
 struct rt_thread producer;
-char producer_stack[1024];
+char producer_stack[2048];
 void producer_entry(void *parameter);
 
 struct rt_thread consumer;
-char consumer_stack[1024];
+char consumer_stack[20480];
 void consumer_entry(void *parameter);
 
 #endif
