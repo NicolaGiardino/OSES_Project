@@ -4,7 +4,7 @@
 #include <rtthread.h>
 #include "procedure.h"
 
-#define DEBUG_XENO 0
+#define XENO_PRINT 1
 
 #define HIGHEST RT_THREAD_PRIORITY_MAX - 20 /* highest priority */
 #define HIGH RT_THREAD_PRIORITY_MAX - 19     /* high priority */
@@ -54,7 +54,7 @@ int init_xeno() {
   rt_int32_t ExecTime;
   size_t i;
 
-#if DEBUG_XENO
+#if XENO_PRINT
   rt_kprintf("XenoJetBench: An Open Source Hard-Real-Time Multiprocessor "
              "Benchmark\n\n");
 #endif
@@ -66,7 +66,7 @@ int init_xeno() {
   defaultParam();
 
 
-#if DEBUG_XENO
+#if XENO_PRINT
   switch (engine) {
   case 1:
     rt_kprintf("Engine %d : Turbojet is selected\n\n", engine);
@@ -132,7 +132,7 @@ int init_xeno() {
     results[12] = weight;
     results[13] = (fnlb / weight);
 
-#if DEBUG_XENO
+#if XENO_PRINT
     //*********** PRINT RESULTS ************
     rt_kprintf("%d, "
                "%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d\n     @ point %d\n",
@@ -146,20 +146,20 @@ int init_xeno() {
   }
 
 
-#if DEBUG_XENO
+#if XENO_PRINT
   rt_kprintf("\n==> Ending XenoJetBench Execution\n\n");
   rt_kprintf("\n========================================================\n");
   rt_kprintf("    XenoJetBench Successfully Terminated\n\n");
 #endif
 
-#if DEBUG_XENO
+#if XENO_PRINT
   rt_kprintf("    XenoJetBench Start time : %d secs\n ",
              (int)(BM_Start / 1000));
 #endif
 
   BM_End = rt_tick_get_millisecond();
 
-#if DEBUG_XENO
+#if XENO_PRINT
   rt_kprintf("   XenoJetBench End time : %d secs\n", (int)(BM_End / 1000));
   rt_kprintf("   Total Benchmark time : %d secs\n",
              (int)((BM_End - BM_Start) / 1000));

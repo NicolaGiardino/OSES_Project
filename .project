@@ -24,16 +24,4 @@
 		<nature>org.eclipse.cdt.managedbuilder.core.managedBuildNature</nature>
 		<nature>org.eclipse.cdt.managedbuilder.core.ScannerConfigNature</nature>
 	</natures>
-	<linkedResources>
-		<link>
-			<name>applications/deferrable.c</name>
-			<type>1</type>
-			<location>C:/Users/nicol/Desktop/PoliTo/OSES/OSES_Project/applications/deferrable.c</location>
-		</link>
-		<link>
-			<name>applications/deferrable.h</name>
-			<type>1</type>
-			<location>C:/Users/nicol/Desktop/PoliTo/OSES/OSES_Project/applications/deferrable.h</location>
-		</link>
-	</linkedResources>
 </projectDescription>
