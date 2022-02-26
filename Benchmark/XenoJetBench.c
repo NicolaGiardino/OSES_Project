@@ -2,6 +2,9 @@
 
 #include <rtdevice.h>
 #include <rtthread.h>
+#include "procedure.h"
+
+#define DEBUG_XENO 0
 
 #define HIGHEST RT_THREAD_PRIORITY_MAX - 20 /* highest priority */
 #define HIGH RT_THREAD_PRIORITY_MAX - 19     /* high priority */
@@ -13,7 +16,8 @@
 static struct rt_thread thd_deduceinputs, thd_getthermo, thd_getgeo, thd_calcperf;
 static rt_uint8_t rt_thd_stack[4][2048];
 
-void create_tasks() {
+void create_tasks()
+{
   rt_thread_init(&thd_deduceinputs, "DeduceInputs", &deduceInputs, RT_NULL,
                  rt_thd_stack[0], sizeof(rt_thd_stack[0]), HIGHEST, period);
   rt_thread_init(&thd_getthermo, "GetThermo", &getThermo, RT_NULL,
@@ -24,27 +28,31 @@ void create_tasks() {
                  sizeof(rt_thd_stack[3]), LOW, period);
 }
 
-void start_tasks() {
+void start_tasks()
+{
   rt_thread_startup(&thd_deduceinputs);
   rt_thread_startup(&thd_getthermo);
   rt_thread_startup(&thd_getgeo);
   rt_thread_startup(&thd_calcperf);
 }
 
-void cleanup() {
+void cleanup()
+{
   rt_thread_delete(&thd_deduceinputs);
   rt_thread_delete(&thd_getthermo);
   rt_thread_delete(&thd_getgeo);
   rt_thread_delete(&thd_calcperf);
 }
 
-int init_xeno(float mod0[], float mod1[], float mod2[], size_t N) {
+int init_xeno() {
   uint64_t BM_Start = rt_tick_get_millisecond(), BM_End, StartTime, EndTime,
            ExecTime;
   size_t i;
 
+#if DEBUG_XENO
   rt_kprintf("XenoJetBench: An Open Source Hard-Real-Time Multiprocessor "
              "Benchmark\n\n");
+#endif
 
   create_tasks();
 
@@ -54,6 +62,8 @@ int init_xeno(float mod0[], float mod1[], float mod2[], size_t N) {
   // define paramaters
   defaultParam();
 
+
+#if DEBUG_XENO
   switch (engine) {
   case 1:
     rt_kprintf("Engine %d : Turbojet is selected\n\n", engine);
@@ -76,12 +86,19 @@ int init_xeno(float mod0[], float mod1[], float mod2[], size_t N) {
   rt_kprintf("ExecTime, "
              "Spd|Alt|Thr|Mach|Press|Temp|Fnet|Fgros|RamDr|FlFlo|TSFC|Airfl|"
              "Weight|Fn/W\n");
+#endif
 
-  for (i = 0; i < N; ++i) {
+  for (i = 0; i < NUM_READINGS; i++) {
     //********* PARSE INPUTS **********
-    u0d = mod0[i];
-    altd = mod1[i];
-    throtl = mod2[i];
+    /*
+     * The mutex is taken only when reading/writing from/to the shared variables
+     * allowing other tasks to keep on using them
+     */
+    rt_mutex_take(raw_mutex, RT_WAITING_FOREVER);
+    u0d = acc_v[i];
+    altd = temp_v[i];
+    throtl = gyro_v[i];
+    rt_mutex_release(raw_mutex);
 
     //********* START CALCULATIONS **********
     StartTime = rt_tick_get_millisecond();
@@ -89,6 +106,24 @@ int init_xeno(float mod0[], float mod1[], float mod2[], size_t N) {
     EndTime = rt_tick_get_millisecond();
     ExecTime = EndTime - StartTime;
 
+    rt_mutex_take(bench_mutex, RT_WAITING_FOREVER);
+
+    results[0] = u0d;
+    results[1] = altd;
+    results[2] = throtl;
+    results[3] = fsmach;
+    results[4] = psout;
+    results[5] = tsout;
+    results[6] = fnlb;
+    results[7] = fglb;
+    results[8] = drlb;
+    results[9] = flflo;
+    results[10] = sfc;
+    results[11] = eair;
+    results[12] = weight;
+    results[13] = (fnlb / weight);
+
+#if DEBUG_XENO
     //*********** PRINT RESULTS ************
     rt_kprintf("%d, "
                "%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d|%d\n     @ point %d\n",
@@ -96,21 +131,34 @@ int init_xeno(float mod0[], float mod1[], float mod2[], size_t N) {
                (int)psout, (int)tsout, (int)fnlb, (int)fglb, (int)drlb,
                (int)flflo, (int)sfc, (int)eair, (int)weight,
                (int)(fnlb / weight), i + 1);
+#endif
+
+    rt_mutex_release(bench_mutex);
   }
 
+
+#if DEBUG_XENO
   rt_kprintf("\n==> Ending XenoJetBench Execution\n\n");
   rt_kprintf("\n========================================================\n");
   rt_kprintf("    XenoJetBench Successfully Terminated\n\n");
+#endif
 
   cleanup();
 
+#if DEBUG_XENO
   rt_kprintf("    XenoJetBench Start time : %d secs\n ",
              (int)(BM_Start / 1000));
+#endif
+
   BM_End = rt_tick_get_millisecond();
+
+#if DEBUG_XENO
   rt_kprintf("   XenoJetBench End time : %d secs\n", (int)(BM_End / 1000));
   rt_kprintf("   Total Benchmark time : %d secs\n",
              (int)((BM_End - BM_Start) / 1000));
   rt_kprintf("\n========================================================\n");
+#endif
+
   return (EXIT_SUCCESS);
 }
 

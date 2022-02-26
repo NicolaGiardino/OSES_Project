@@ -6,6 +6,14 @@ static rt_uint32_t addr_bench = 0x800000;
 static size_t curr_read = 0;
 static int16_t acc[3], gyro[3], temp;
 
+/**
+ * This function is called to write mpu and bmp data on the FLASH,
+ * it erases the chip if the last position was written
+ *
+ * @param NULL parameter passed to the function
+ *
+ * @return void
+ */
 void write_raw_mem_async()
 {
   static uint8_t addr8[3];
@@ -14,6 +22,7 @@ void write_raw_mem_async()
   if(addr >= 0x7FFFF4)
   {
       w25q64_control(CHIP_ERASE, RT_NULL, RT_NULL, RT_NULL);
+      addr = 0x00;
   }
 
   rt_mutex_take(raw_mutex, RT_WAITING_FOREVER);
@@ -67,6 +76,14 @@ void write_raw_mem_async()
   rt_mutex_release(raw_mutex);
 }
 
+/**
+ * This function is called to read mpu and bmp data from the FLASH
+ * from the last written position
+ *
+ * @param NULL parameter passed to the function
+ *
+ * @return void
+ */
 void read_raw_mem_async()
 {
   rt_mutex_take(raw_mutex, RT_WAITING_FOREVER);
@@ -94,6 +111,15 @@ void read_raw_mem_async()
   rt_mutex_release(raw_mutex);
 }
 
+/**
+ * This function is the IRQ handler for the 1st button
+ * if DefServ is active, it adds a function to its queue
+ * otherwise calls the write/read function alternatively
+ *
+ * @param NULL parameter passed to the function
+ *
+ * @return void
+ */
 void button_raw_async_handler()
 {
   static uint8_t RWn = 0; /* alternate between writing (first) and reading (after) */
@@ -104,21 +130,28 @@ void button_raw_async_handler()
   RWn ? read_raw_mem_async() : write_raw_mem_async(); /* perform asynchronous action */
 #endif
 
-#if DEBUG
   rt_kprintf("IRQ happened\n");
-#endif
 
   RWn ^= 1; /* invert selection */
 }
 
+/**
+ * This function is called to write bench data on the FLASH,
+ * it erases the chip if the last position was written
+ *
+ * @param NULL parameter passed to the function
+ *
+ * @return void
+ */
 void write_bench_mem_async()
 {
   static uint8_t addr8[3];
   static rt_uint8_t res8[56];
 
-  if(addr_bench >= 0xFFFFF4)
+  if(addr_bench >= 0xFFFFC8)
   {
       w25q64_control(CHIP_ERASE, RT_NULL, RT_NULL, RT_NULL);
+      addr_bench = 0x800000;
   }
 
   rt_mutex_take(bench_mutex, RT_WAITING_FOREVER);
@@ -148,6 +181,14 @@ void write_bench_mem_async()
   rt_mutex_release(raw_mutex);
 }
 
+/**
+ * This function is called to read bench data from the FLASH
+ * from the last written position
+ *
+ * @param NULL parameter passed to the function
+ *
+ * @return void
+ */
 void read_bench_mem_async()
 {
   rt_mutex_take(bench_mutex, RT_WAITING_FOREVER);
@@ -174,6 +215,15 @@ void read_bench_mem_async()
   rt_mutex_release(bench_mutex);
 }
 
+/**
+ * This function is the IRQ handler for the 2nd  button
+ * if DefServ is active, it adds a function to its queue
+ * otherwise calls the write/read function alternatively
+ *
+ * @param NULL parameter passed to the function
+ *
+ * @return void
+ */
 void button_bench_async_handler()
 {
   static uint8_t RWn = 0; /* alternate between writing (first) and reading (after) */
@@ -183,13 +233,20 @@ void button_bench_async_handler()
   RWn ? read_bench_mem_async() : write_bench_mem_async(); /* perform asynchronous action */
 #endif
 
-#if DEBUG
   rt_kprintf("IRQ happened\n");
-#endif
 
   RWn ^= 1; /* invert selection */
 }
 
+/**
+ * This function is the entry for the producer
+ * it reads NUM_READINGS time from the accelerometer and barometer
+ * taking hold of a MUTEX on each reading
+ *
+ * @param NULL parameter passed to the function
+ *
+ * @return void
+ */
 void producer_entry(void *parameter)
 {
   mpu6050_init("i2c1");
@@ -200,6 +257,8 @@ void producer_entry(void *parameter)
 #endif
 
   while (1) {
+
+    rt_kprintf("Start sampling\n");
 
     for (curr_read = 0; curr_read < NUM_READINGS; curr_read++) {
       rt_mutex_take(raw_mutex, RT_WAITING_FOREVER);
@@ -223,36 +282,27 @@ void producer_entry(void *parameter)
       rt_mutex_release(raw_mutex);
     }
 
+    rt_kprintf("End sampling\n");
     rt_thread_mdelay(3000);
   }
 }
 
+/**
+ * This function is the entry for the  consumer
+ * it executes the benchmark
+ *
+ * @param NULL parameter passed to the function
+ *
+ * @return void
+ */
 void consumer_entry(void *parameter)
 {
   while (1) {
-    rt_mutex_take(raw_mutex, RT_WAITING_FOREVER);
 
-    init_xeno(acc_v, gyro_v, temp_v, NUM_READINGS);
+    rt_kprintf("Start benchmark\n");
+    init_xeno();
+    rt_kprintf("End benchmark\n");
 
-    rt_mutex_release(raw_mutex);
 
-    rt_mutex_take(bench_mutex, RT_WAITING_FOREVER);
-
-    results[0] = u0d;
-    results[1] = altd;
-    results[2] = throtl;
-    results[3] = fsmach;
-    results[4] = psout;
-    results[5] = tsout;
-    results[6] = fnlb;
-    results[7] = fglb;
-    results[8] = drlb;
-    results[9] = flflo;
-    results[10] = sfc;
-    results[11] = eair;
-    results[12] = weight;
-    results[13] = (fnlb / weight);
-
-    rt_mutex_release(bench_mutex);
   }
 }

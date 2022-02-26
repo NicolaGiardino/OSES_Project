@@ -8,7 +8,7 @@
 
 // main
 int engine;
-int init_xeno(float mod0[], float mod1[], float mod2[], size_t N);
+int init_xeno();
 
 // methods
 float getGama(float temp);
