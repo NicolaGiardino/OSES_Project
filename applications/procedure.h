@@ -1,16 +1,19 @@
 #ifndef PROCEDURE_H
 #define PROCEDURE_H
 
+#define USE_DEFERR 0
+
 #include "MPU6050.h"
 #include "w25q64.h"
+#if USE_DEFERR
 #include "deferrable.h"
+#endif
 #include <board.h>
 #include <rtdevice.h>
 #include <rtthread.h>
 
 #define DEBUG 0
 
-#define USE_DEFERR 0
 
 #define THREAD_PRIORITY RT_THREAD_PRIORITY_MAX - 15
 #define THREAD_TIMESLICE 10

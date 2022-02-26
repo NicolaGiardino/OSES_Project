@@ -1,6 +1,13 @@
 #include "w25q64.h"
 
-
+/**
+ * This function initializes the spi device of the FLASH
+ * It is called by the kernel at init time
+ *
+ * @param NULL parameter passed to the function
+ *
+ * @return void
+ */
 static int rt_hw_spi_flash_init(void)
 {
     rt_hw_spi_device_attach(W25Q_SPI_BUS_NAME, W25Q_SPI_DEVICE_NAME, GPIOA, GPIO_PIN_4);
@@ -9,7 +16,14 @@ static int rt_hw_spi_flash_init(void)
 }
 INIT_COMPONENT_EXPORT(rt_hw_spi_flash_init);
 
-
+/**
+ * This function initializes the FLASH, getting the device
+ * and configuring the SPI
+ *
+ * @param NULL parameter passed to the function
+ *
+ * @return void
+ */
 int w25q64_init()
 {
 	spi_device = (struct rt_spi_device *)rt_device_find("w25q64");
@@ -30,6 +44,13 @@ int w25q64_init()
 	return 0;
 }
 
+/**
+ * This function is used to get the device ID
+ *
+ * @param the return value (the ID)
+ *
+ * @return void
+ */
 static void w25q64_getJEDEC(rt_uint8_t data[3])
 {
 	rt_uint8_t instr;
@@ -53,6 +74,14 @@ static void w25q64_getJEDEC(rt_uint8_t data[3])
 	rt_spi_transfer_message(spi_device, &msg1);
 }
 
+/**
+ * This function is used to get the Status Register
+ *
+ * @param The instruction to see which of the two SRs must be read
+ * @param The returned SR
+ *
+ * @return void
+ */
 static void w25q64_getSR(rt_uint8_t instr, rt_uint8_t *data)
 {
 
@@ -76,6 +105,13 @@ static void w25q64_getSR(rt_uint8_t instr, rt_uint8_t *data)
 
 }
 
+/**
+ * This function is used to write the Status Register
+ *
+ * @param The read SRs
+ *
+ * @return void
+ */
 static void w25q64_writeSR(rt_uint8_t data[2])
 {
 	/* Write Enable */
@@ -122,6 +158,13 @@ static void w25q64_writeSR(rt_uint8_t data[2])
 	rt_spi_transfer_message(spi_device, &msg1);
 }
 
+/**
+ * This function is used to erase the chip
+ *
+ * @param NULL parameter passed to the function
+ *
+ * @return void
+ */
 static void w25q64_erase()
 {
 	rt_uint8_t instr, buf;
@@ -183,6 +226,14 @@ static void w25q64_erase()
 	rt_spi_transfer_message(spi_device, &msg1);
 }
 
+/**
+ * This function is used to erase a block or a sector of the chip
+ *
+ * @param The instruction that defines how much memory to erase
+ * @param The address from which to start erasing
+ *
+ * @return void
+ */
 static void w25q64_erase_part(rt_uint8_t instr, rt_uint8_t addr[3])
 {
 
@@ -251,6 +302,15 @@ static void w25q64_erase_part(rt_uint8_t instr, rt_uint8_t addr[3])
 	rt_spi_transfer_message(spi_device, &msg1);
 }
 
+/**
+ * This function is used to write on the FLASH on a given address
+ *
+ * @param The address to write to
+ * @param The data length
+ * @param The data to be written
+ *
+ * @return void
+ */
 static void w25q64_write(rt_uint8_t addr[3], rt_uint8_t dlen, rt_uint8_t *data)
 {
 	/* Write Enable */
@@ -304,6 +364,15 @@ static void w25q64_write(rt_uint8_t addr[3], rt_uint8_t dlen, rt_uint8_t *data)
 	rt_spi_transfer_message(spi_device, &msg1);
 }
 
+/**
+ * This function is used to read from the FLASH from a given address
+ *
+ * @param The address from which to read
+ * @param How many bytes to read
+ * @param The returned read data
+ *
+ * @return void
+ */
 static void w25q64_read(rt_uint8_t addr[3], rt_uint8_t dlen, rt_uint8_t *data)
 {
 	rt_uint8_t instr;
@@ -335,6 +404,13 @@ static void w25q64_read(rt_uint8_t addr[3], rt_uint8_t dlen, rt_uint8_t *data)
 	rt_spi_transfer_message(spi_device, &msg1);
 }
 
+/**
+ * This function is used to reset the chip
+ *
+ * @param NULL parameter passed to the function
+ *
+ * @return void
+ */
 static void w25q64_reset()
 {
 	/* Reset Enable */
@@ -363,6 +439,18 @@ static void w25q64_reset()
 	rt_spi_transfer_message(spi_device, &msg1);
 }
 
+/**
+ * This function is the only public function
+ * it is used to control the chip by using the defined instruction
+ * This then calls the relative function based on the input command
+ *
+ * @param The instruction to switch to the right command
+ * @param The address, if needed, to use
+ * @param The data lenght, if needed
+ * @param The data to pass/receive, if needed
+ *
+ * @return void
+ */
 void w25q64_control(rt_uint8_t instr, rt_uint8_t addr[3], rt_uint8_t dlen, rt_uint8_t *data)
 {
 	switch (instr)

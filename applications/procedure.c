@@ -288,7 +288,7 @@ void producer_entry(void *parameter)
 }
 
 /**
- * This function is the entry for the  consumer
+ * This function is the entry for the consumer
  * it executes the benchmark
  *
  * @param NULL parameter passed to the function
