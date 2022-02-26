@@ -2,6 +2,13 @@
 
 static int addr = 0x68;
 
+/**
+ * This function initializes the I2C device for the accelerometer
+ *
+ * @param NULL parameter passed to the function
+ *
+ * @return void
+ */
 void mpu6050_init(char *dev_name)
 {
     i2c_device = rt_i2c_bus_device_find(dev_name);
@@ -11,6 +18,13 @@ void mpu6050_init(char *dev_name)
     }
 }
 
+/**
+ * This function is used to reset the mpu6050, must be called at startup
+ *
+ * @param NULL parameter passed to the function
+ *
+ * @return void
+ */
 void mpu6050_reset()
 {
     // Two byte reset. First byte register, second byte data
@@ -27,6 +41,15 @@ void mpu6050_reset()
     }
 }
 
+/**
+ * This function is used to read raw data from the accelerometer via I2C
+ *
+ * @param accelerometer raw data
+ * @param gyroscope raw data
+ * @param temperature raw data
+ *
+ * @return void
+ */
 void mpu6050_read_raw(int16_t accel[3], int16_t gyro[3], int16_t *temp)
 {
     // For this particular device, we send the device the register we want to read
