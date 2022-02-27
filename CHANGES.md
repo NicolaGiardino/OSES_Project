@@ -26,3 +26,4 @@ Changes:
 | Nicolo' Carpentieri | Feb 25 '22 | Commit 19 | Implemented DefServ via define, adjustments on priorities and bug fixes, ready for final tests |
 | Nicola di Gruttola Giardino | Feb 26 '22 | Commit 20 | Code adjustments on position of Mutexes, commented code |
 | Nicola di Gruttola Giardino | Feb 26 '22 | Commit 21 | Completed tests, everything done until now working. WCETs are: Benchmark approx 186s, Sampling approx 2s, IRQ with DefServ approx 20s |
+| Nicolo' Carpentieri | Feb 27 '22 | Commit 22 | Completed implementation of multithreading, first implementation of barometer's library |

@@ -140,12 +140,14 @@ void button_raw_async_handler()
 {
   static uint8_t RWn = 0; /* alternate between writing (first) and reading (after) */
 
-
+#if DEBUG
   rt_kprintf("IRQ happened\n");
+#endif
+
 #if USE_DEFERR
   RWn ? rt_thread_deferrable_insert_task(&raw[1]) : rt_thread_deferrable_insert_task(&raw[0]);
 #else
-  //RWn ? read_raw_mem_async() : write_raw_mem_async(); /* perform asynchronous action */
+  RWn ? rt_thread_startup(&read_mem_raw) : rt_thread_startup(&write_mem_raw); /* perform asynchronous action */
 #endif
 
   RWn ^= 1; /* invert selection */
@@ -262,10 +264,12 @@ void button_bench_async_handler()
 #if USE_DEFERR
   RWn ? rt_thread_deferrable_insert_task(&bench[1]) : rt_thread_deferrable_insert_task(&bench[0]);
 #else
-  //RWn ? read_bench_mem_async() : write_bench_mem_async(); /* perform asynchronous action */
+  RWn ? rt_thread_startup(&read_mem_bench) : rt_thread_startup(&write_mem_bench); /* perform asynchronous action */
 #endif
 
+#if DEBUG
   rt_kprintf("IRQ happened\n");
+#endif
 
   RWn ^= 1; /* invert selection */
 }

@@ -16,8 +16,24 @@
 #define PUSHBUTTON_RAW GET_PIN(C, 13)
 #define PUSHBUTTON_BENCH GET_PIN(C, 7)
 
+static uint32_t i;
+
+// RAW temperature and pressure values
+int32_t UT, UP;
+
+// Human-readable temperature and pressure
+int32_t temperature;
+uint32_t pressure;
+
+#if (BMP280_FLOAT_FUNCTIONS)
+// Temperature and pressure, float
+float temperature_f;
+float pressure_f;
+#endif
+
 int main(void) {
   rt_kprintf("Hello, RT-Thread!\n");
+
 
   if (w25q64_init()) {
     rt_kprintf("Error on spi device");
@@ -46,8 +62,23 @@ int main(void) {
   bench[1].thd_fun = read_bench_mem_async;
   bench[1].args = RT_NULL;
 
-  rt_thread_deferrable_init(1000, 1000, THREAD_PRIORITY - 3);
+  rt_thread_deferrable_init(1000, 1000, THREAD_PRIORITY_DEF);
+#else
+  rt_thread_init(&write_mem_raw, "write raw", write_raw_mem_async, RT_NULL,
+                   &mem_raw[0][0], sizeof(mem_raw[0]), THREAD_PRIORITY_DEF,
+                   THREAD_TIMESLICE);
 
+  rt_thread_init(&read_mem_raw, "read raw", read_raw_mem_async, RT_NULL,
+                 &mem_raw[1][0], sizeof(mem_raw[1]), THREAD_PRIORITY_DEF,
+                 THREAD_TIMESLICE);
+
+  rt_thread_init(&write_mem_bench, "write bench", write_bench_mem_async, RT_NULL,
+                   &mem_bench[0][0], sizeof(mem_bench[0]), THREAD_PRIORITY_DEF,
+                   THREAD_TIMESLICE);
+
+  rt_thread_init(&read_mem_bench, "read bench", read_bench_mem_async, RT_NULL,
+                 &mem_bench[1][0], sizeof(mem_bench[1]), THREAD_PRIORITY_DEF,
+                 THREAD_TIMESLICE);
 #endif
 
   rt_pin_mode(PUSHBUTTON_RAW, PIN_MODE_INPUT);
@@ -87,6 +118,7 @@ int main(void) {
   rt_thread_startup(&producer);
   rt_thread_startup(&consumer);
 
-  // while (1)
-  //{}
+
+
+
 }
