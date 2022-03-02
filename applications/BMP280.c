@@ -74,7 +74,7 @@ BMP280_RESULT BMP280_init(char *dev_name)
     if (i2c_device == RT_NULL)
     {
         rt_kprintf("i2c bus device %s not found! ", dev_name);
-        return -BMP280_ERROR;
+        return BMP280_ERROR;
     }
 
     return BMP280_SUCCESS;
@@ -85,8 +85,8 @@ BMP280_RESULT BMP280_init(char *dev_name)
 // input:
 //   reg - register number
 //   value - new register value
-static void __reg_write(uint8_t reg, uint8_t value) {
-    uint8_t buf[2] = { reg, value };
+static void __reg_write(rt_uint8_t reg, rt_uint8_t value) {
+    rt_uint8_t buf[2] = { reg, value };
 
     struct rt_i2c_msg msgs;
     msgs.buf = buf;
@@ -104,28 +104,29 @@ static void __reg_write(uint8_t reg, uint8_t value) {
 // input:
 //   reg - register number
 // return: register value (zero in case of error on I2C bus)
-static uint8_t __reg_read(uint8_t reg) {
-    uint8_t value = 0;
+static rt_uint8_t __reg_read(rt_uint8_t reg) {
+    rt_uint8_t value = 0;
+    rt_uint8_t addr = reg;
     struct rt_i2c_msg msgs[2];
 
-    msgs[0].buf = &reg;
+    msgs[0].buf = &addr;
     msgs[0].addr = BMP280_ADDR;
     msgs[0].len = 1;
-    msgs[0].flags = RT_I2C_WR | RT_I2C_NO_STOP;
+    msgs[0].flags = RT_I2C_WR;
 
     msgs[1].buf = &value;
     msgs[1].addr = BMP280_ADDR;
     msgs[1].len = 1;
     msgs[1].flags = RT_I2C_RD;
 
-    if (rt_i2c_transfer(i2c_device, &msgs[0], 1) != 1)
+    if (rt_i2c_transfer(i2c_device, msgs, 2) != 2)
     {
         rt_kprintf("write fail!\n");
     }
-    if (rt_i2c_transfer(i2c_device, &msgs[1], 1) != 1)
+    /*if (rt_i2c_transfer(i2c_device, &msgs[1], 1) != 1)
     {
         rt_kprintf("read fail!\n");
-    }
+    }*/
 
     return value;
 }
@@ -136,11 +137,12 @@ static uint8_t __reg_read(uint8_t reg) {
 //   buf - pointer to the buffer to store data
 //   len - number of registers to read
 // return: BMP280_ERROR in case of error on I2C bus, BMP280_SUCCESS otherwise
-static BMP280_RESULT __reg_read_bulk(uint8_t reg, uint8_t *buf, uint32_t count) {
+static BMP280_RESULT __reg_read_bulk(rt_uint8_t reg, rt_uint8_t *buf, rt_uint8_t count) {
 
     struct rt_i2c_msg msgs[2];
+    rt_uint8_t addr = reg;
 
-    msgs[0].buf = &reg;
+    msgs[0].buf = &addr;
     msgs[0].addr = BMP280_ADDR;
     msgs[0].len = 1;
     msgs[0].flags = RT_I2C_WR;
@@ -163,6 +165,7 @@ static BMP280_RESULT __reg_read_bulk(uint8_t reg, uint8_t *buf, uint32_t count) 
 // Check if BMP280 present on I2C bus
 // return: BMP280_SUCCESS if BMP280 present, BMP280_ERROR otherwise
 BMP280_RESULT BMP280_Check(void) {
+    rt_kprintf("%d\n", BMP280_GetVersion());
     switch (BMP280_GetVersion()) {
         case BMP280_CHIP_ID1:
         case BMP280_CHIP_ID2:
@@ -181,19 +184,19 @@ inline void BMP280_Reset(void) {
 
 // Get version of the BMP280 chip
 // return: version of BMP280 chip or zero in case of chip absence or error on I2C bus
-inline uint8_t BMP280_GetVersion(void) {
+inline rt_uint8_t BMP280_GetVersion(void) {
     return __reg_read(BMP280_REG_ID);
 }
 
 // Get current status of the BMP280 chip
 // return: status of the chip or zero in case of chip absence or error on I2C bus
-inline uint8_t BMP280_GetStatus(void) {
+inline rt_uint8_t BMP280_GetStatus(void) {
     return __reg_read(BMP280_REG_STATUS) & BMP280_STATUS_MSK;
 }
 
 // Get current sensor mode of the BMP280 chip
 // return: working mode of the chip or zero in case of chip absence or error on I2C bus
-inline uint8_t BMP280_GetMode(void) {
+inline rt_uint8_t BMP280_GetMode(void) {
     return __reg_read(BMP280_REG_CTRL_MEAS) & BMP280_MODE_MSK;
 }
 
@@ -201,50 +204,50 @@ inline uint8_t BMP280_GetMode(void) {
 // input:
 //   mode - new mode (one of BMP280_MODE_xx values)
 // note: always set the power mode after sensor configuration is done
-void BMP280_SetMode(uint8_t mode) {
+void BMP280_SetMode(rt_uint8_t mode) {
     // Configure 'mode' bits in 'ctrl_meas' (0xF4) register
     mode &= BMP280_MODE_MSK;
-    uint8_t reg = (uint8_t)(__reg_read(BMP280_REG_CTRL_MEAS) & ~BMP280_MODE_MSK);
+    rt_uint8_t reg = (rt_uint8_t)(__reg_read(BMP280_REG_CTRL_MEAS) & ~BMP280_MODE_MSK);
     __reg_write(BMP280_REG_CTRL_MEAS, reg | mode);
 }
 
 // Set coefficient of the IIR filter
 // input:
 //   filter - new coefficient value (one of BMP280_FILTER_x values)
-void BMP280_SetFilter(uint8_t filter) {
+void BMP280_SetFilter(rt_uint8_t filter) {
     // Configure 'filter' bits in 'config' (0xF5) register
     filter &= BMP280_FILTER_MSK;
-    uint8_t reg = (uint8_t)(__reg_read(BMP280_REG_CONFIG) & ~BMP280_FILTER_MSK);
+    rt_uint8_t reg = (rt_uint8_t)(__reg_read(BMP280_REG_CONFIG) & ~BMP280_FILTER_MSK);
     __reg_write(BMP280_REG_CONFIG, reg | filter);
 }
 
 // Set inactive duration in normal mode (Tstandby)
 // input:
 //   tsb - new inactive duration (one of BMP280_STBY_x values)
-void BMP280_SetStandby(uint8_t tsb) {
+void BMP280_SetStandby(rt_uint8_t tsb) {
     // Configure 't_sb' bits in 'config' (0xF5) register
     tsb &= BMP280_STBY_MSK;
-    uint8_t reg = (uint8_t)(__reg_read(BMP280_REG_CONFIG) & ~BMP280_STBY_MSK);
+    rt_uint8_t reg = (rt_uint8_t)(__reg_read(BMP280_REG_CONFIG) & ~BMP280_STBY_MSK);
     __reg_write(BMP280_REG_CONFIG, reg | tsb);
 }
 
 // Set oversampling of temperature data
 // input:
 //   osrs - new oversampling value (one of BMP280_OSRS_T_Xx values)
-void BMP280_SetOSRST(uint8_t osrs) {
+void BMP280_SetOSRST(rt_uint8_t osrs) {
     // Configure 'osrs_t' bits in 'ctrl_meas' (0xF4) register
     osrs &= BMP280_OSRS_T_MSK;
-    uint8_t reg = (uint8_t)(__reg_read(BMP280_REG_CTRL_MEAS) & ~BMP280_OSRS_T_MSK);
+    rt_uint8_t reg = (rt_uint8_t)(__reg_read(BMP280_REG_CTRL_MEAS) & ~BMP280_OSRS_T_MSK);
     __reg_write(BMP280_REG_CTRL_MEAS, reg | osrs);
 }
 
 // Set oversampling of pressure data
 // input:
 //   osrs - new oversampling value (one of BMP280_OSRS_P_Xx values)
-void BMP280_SetOSRSP(uint8_t osrs) {
+void BMP280_SetOSRSP(rt_uint8_t osrs) {
     // Configure 'osrs_p' bits in 'ctrl_meas' (0xF4) register
     osrs &= BMP280_OSRS_P_MSK;
-    uint8_t reg = (uint8_t)(__reg_read(BMP280_REG_CTRL_MEAS) & ~BMP280_OSRS_P_MSK);
+    rt_uint8_t reg = (rt_uint8_t)(__reg_read(BMP280_REG_CTRL_MEAS) & ~BMP280_OSRS_P_MSK);
     __reg_write(BMP280_REG_CTRL_MEAS, reg | osrs);
 }
 
@@ -252,7 +255,7 @@ void BMP280_SetOSRSP(uint8_t osrs) {
 // return: BMP280_ERROR in case of error on I2C bus, BMP280_SUCCESS otherwise
 BMP280_RESULT BMP280_Read_Calibration(void) {
     // Bulk read from 'calib00' to 'calib25'
-    return __reg_read_bulk(BMP280_REG_CALIB00, (uint8_t *)&cal_param, sizeof(cal_param));
+    return __reg_read_bulk(BMP280_REG_CALIB00, (rt_uint8_t *)&cal_param, sizeof(cal_param));
 }
 
 // Read a raw (uncompensated) temperature value
@@ -261,12 +264,12 @@ BMP280_RESULT BMP280_Read_Calibration(void) {
 // return: BMP280_ERROR in case of error on I2C bus, BMP280_SUCCESS otherwise
 // note: the '0x80000' value in UT means no temperature data is present,
 //       i.e. that measurement is disabled or not ready yet
-BMP280_RESULT BMP280_Read_UT(int32_t *UT) {
-    uint8_t buf[3];
+BMP280_RESULT BMP280_Read_UT(rt_int32_t *UT) {
+    rt_uint8_t buf[3];
 
     // Bulk read from 'temp_msb' to 'temp_xlsb'
     if (__reg_read_bulk(BMP280_REG_TEMP_MSB, buf, sizeof(buf)) == BMP280_SUCCESS) {
-        *UT = (int32_t)((buf[0] << 12) | (buf[1] << 4) | (buf[2] >> 4));
+        *UT = (rt_int32_t)((buf[0] << 12) | (buf[1] << 4) | (buf[2] >> 4));
         return BMP280_SUCCESS;
     }
 
@@ -282,12 +285,12 @@ BMP280_RESULT BMP280_Read_UT(int32_t *UT) {
 // return: BMP280_ERROR in case of error on I2C bus, BMP280_SUCCESS otherwise
 // note: the '0x80000' value in UP means no pressure data is present,
 //       i.e. that measurement is disabled or not ready yet
-BMP280_RESULT BMP280_Read_UP(int32_t *UP) {
-    uint8_t buf[3];
+BMP280_RESULT BMP280_Read_UP(rt_int32_t *UP) {
+    rt_uint8_t buf[3];
 
     // Bulk read from 'press_msb' to 'press_xlsb'
     if (__reg_read_bulk(BMP280_REG_PRESS_MSB, buf, sizeof(buf)) == BMP280_SUCCESS) {
-        *UP = (int32_t)((buf[0] << 12) | (buf[1] << 4) | (buf[2] >> 4));
+        *UP = (rt_int32_t)((buf[0] << 12) | (buf[1] << 4) | (buf[2] >> 4));
         return BMP280_SUCCESS;
     }
 
@@ -304,13 +307,13 @@ BMP280_RESULT BMP280_Read_UP(int32_t *UP) {
 // return: BMP280_ERROR in case of error on I2C bus, BMP280_SUCCESS otherwise
 // note: the '0x80000' value means no data for this particular value is present,
 //       i.e. that measurement is disabled or not ready yet
-BMP280_RESULT BMP280_Read_UTP(int32_t *UT, int32_t *UP) {
-    uint8_t buf[8];
+BMP280_RESULT BMP280_Read_UTP(rt_int32_t *UT, rt_int32_t *UP) {
+    rt_uint8_t buf[8];
 
     // Bulk read from 'press_msb' to 'temp_xlsb'
     if (__reg_read_bulk(BMP280_REG_PRESS_MSB, buf, sizeof(buf)) == BMP280_SUCCESS) {
-        *UP = (int32_t)((buf[0] << 12) | (buf[1] << 4) | (buf[2] >> 4));
-        *UT = (int32_t)((buf[3] << 12) | (buf[4] << 4) | (buf[5] >> 4));
+        *UP = (rt_int32_t)((buf[0] << 12) | (buf[1] << 4) | (buf[2] >> 4));
+        *UT = (rt_int32_t)((buf[3] << 12) | (buf[4] << 4) | (buf[5] >> 4));
         return BMP280_SUCCESS;
     }
 
@@ -326,7 +329,7 @@ BMP280_RESULT BMP280_Read_UTP(int32_t *UT, int32_t *UP) {
 //   UT - raw temperature value
 // return: temperature in Celsius degrees (value of '5123' represents '51.23C')
 // note: code from the BMP280 datasheet (rev 1.19)
-int32_t BMP280_CalcT(int32_t UT) {
+rt_int32_t BMP280_CalcT(rt_int32_t UT) {
 #if (BMP280_CALC_TYPE != 2)
     // Integer calculations
 
@@ -348,7 +351,7 @@ int32_t BMP280_CalcT(int32_t UT) {
     v_x2 = (v_x2 * v_x2) * ((float)cal_param.dig_T3);
     t_fine_f = v_x1 + v_x2;
 
-    return (int32_t)(((v_x1 + v_x2) / 5120.0F) * 100.0F);
+    return (rt_int32_t)(((v_x1 + v_x2) / 5120.0F) * 100.0F);
 #endif // BMP280_CALC_TYPE
 }
 
@@ -358,11 +361,11 @@ int32_t BMP280_CalcT(int32_t UT) {
 // return: pressure in mPa (value of '100663688' represents '100663.688Pa')
 // note: BMP280_CalcT() should be called before calling this function
 // note: code from the BMP280 datasheet (rev 1.19)
-uint32_t BMP280_CalcP(int32_t UP) {
+rt_uint32_t BMP280_CalcP(rt_int32_t UP) {
 #if (BMP280_CALC_TYPE == 0)
     // 32-bit only calculations
-    int32_t v1, v2;
-    uint32_t p;
+    rt_int32_t v1, v2;
+    rt_uint32_t p;
 
     v1 = (((int32_t)t_fine) >> 1) - (int32_t)64000;
     v2 = (((v1 >> 2) * (v1 >> 2)) >> 11 ) * ((int32_t)cal_param.dig_P6);
@@ -388,7 +391,7 @@ uint32_t BMP280_CalcP(int32_t UP) {
     return p * 1000U;
 #elif (BMP280_CALC_TYPE == 1)
     // 64-bit calculations
-    int64_t v1, v2, p;
+    rt_int64_t v1, v2, p;
 
     v1 = (int64_t)t_fine - 128000;
     v2 = v1 * v1 * (int64_t)cal_param.dig_P6;
@@ -420,7 +423,7 @@ uint32_t BMP280_CalcP(int32_t UP) {
             ((float)cal_param.dig_P2) * v_x1) / 524288.0F;
     v_x1 = (1.0F + v_x1 / 32768.0F) * ((float)cal_param.dig_P1);
     p_f = 1048576.0F - (float)UP;
-    if ((uint32_t)v_x1 == 0U) {
+    if ((rt_uint32_t)v_x1 == 0U) {
         // Avoid exception caused by division by zero
         return 0;
     }
@@ -429,7 +432,7 @@ uint32_t BMP280_CalcP(int32_t UP) {
     v_x2 = p_f * ((float)cal_param.dig_P8) / 32768.0F;
     p_f += (v_x1 + v_x2 + ((float)cal_param.dig_P7)) / 16.0F;
 
-    return (uint32_t)(p_f * 1000.0F);
+    return (rt_uint32_t)(p_f * 1000.0F);
 #endif // BMP280_CALC_TYPE
 }
 
@@ -437,7 +440,7 @@ uint32_t BMP280_CalcP(int32_t UP) {
 // input:
 //   p_pa - pressure, milli pascals
 // return: pressure, "micro-meters" of mercury (value of '739503' represents '739.503mmHg')
-uint32_t BMP280_Pa_to_mmHg(uint32_t p_pa) {
+rt_uint32_t BMP280_Pa_to_mmHg(rt_uint32_t p_pa) {
 #if (BMP280_CALC_TYPE == 0)
     // 32-bit fixed point calculations
 
@@ -460,7 +463,7 @@ uint32_t BMP280_Pa_to_mmHg(uint32_t p_pa) {
     return (uint32_t)p_mmHg;
 #else // BMP280_CALC_TYPE == 2
     // Float calculations
-    return (uint32_t)((float)p_pa / 133.322368F);
+    return (rt_uint32_t)((float)p_pa / 133.322368F);
 #endif // BMP280_CALC_TYPE
 
 
@@ -474,7 +477,7 @@ uint32_t BMP280_Pa_to_mmHg(uint32_t p_pa) {
 //   UT - raw temperature value
 // return: temperature in Celsius degrees
 // note: code from the BMP280 datasheet (rev 1.19)
-float BMP280_CalcTf(int32_t UT) {
+float BMP280_CalcTf(rt_int32_t UT) {
     float v_x1, v_x2;
 
     v_x1 = (((float)UT) / 16384.0F - ((float)cal_param.dig_T1) / 1024.0F) * \
@@ -492,7 +495,7 @@ float BMP280_CalcTf(int32_t UT) {
 // return: pressure in Pa
 // note: BMP280_CalcT of BMP280_CalcTf must be called before calling this function
 // note: code from the BMP280 datasheet (rev 1.19)
-float BMP280_CalcPf(uint32_t UP) {
+float BMP280_CalcPf(rt_uint32_t UP) {
     float v_x1, v_x2, p;
 
     v_x1 = (t_fine_f / 2.0F) - 64000.0F;
@@ -503,7 +506,7 @@ float BMP280_CalcPf(uint32_t UP) {
             ((float)cal_param.dig_P2) * v_x1) / 524288.0F;
     v_x1 = (1.0F + v_x1 / 32768.0F) * ((float)cal_param.dig_P1);
     p = 1048576.0F - (float)UP;
-    if ((uint32_t)v_x1 == 0U) {
+    if ((rt_uint32_t)v_x1 == 0U) {
         // Avoid exception caused by division by zero
         return 0.0F;
     }

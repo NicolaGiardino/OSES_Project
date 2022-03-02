@@ -25,7 +25,7 @@ struct rt_i2c_bus_device *i2c_device;
 #define BMP280_FLOAT_FUNCTIONS          1
 
 // Possible I2C device address values
-#define BMP280_ADDR_G                   ((uint8_t)0x76) // SDO pin tied to GND
+#define BMP280_ADDR_G                   (0x76) // SDO pin tied to GND
 #define BMP280_ADDR_V                   ((uint8_t)0x77) // SDO pin tied to VDDIO
 
 // Device address, select one of BMP280_ADDR_XXX values above according to the chip wiring
@@ -95,30 +95,30 @@ BMP280_RESULT BMP280_init(char *dev_name);
 BMP280_RESULT BMP280_Check(void);
 void BMP280_Reset(void);
 
-uint8_t BMP280_GetVersion(void);
-uint8_t BMP280_GetStatus(void);
-uint8_t BMP280_GetMode(void);
+rt_uint8_t BMP280_GetVersion(void);
+rt_uint8_t BMP280_GetStatus(void);
+rt_uint8_t BMP280_GetMode(void);
 
-void BMP280_SetMode(uint8_t mode);
-void BMP280_SetFilter(uint8_t filter);
-void BMP280_SetStandby(uint8_t tsb);
-void BMP280_SetOSRST(uint8_t osrs);
-void BMP280_SetOSRSP(uint8_t osrs);
+void BMP280_SetMode(rt_uint8_t mode);
+void BMP280_SetFilter(rt_uint8_t filter);
+void BMP280_SetStandby(rt_uint8_t tsb);
+void BMP280_SetOSRST(rt_uint8_t osrs);
+void BMP280_SetOSRSP(rt_uint8_t osrs);
 
 BMP280_RESULT BMP280_Read_Calibration(void);
-BMP280_RESULT BMP280_Read_UP(int32_t *UP);
-BMP280_RESULT BMP280_Read_UT(int32_t *UT);
-BMP280_RESULT BMP280_Read_UTP(int32_t *UT, int32_t *UP);
+BMP280_RESULT BMP280_Read_UP(rt_int32_t *UP);
+BMP280_RESULT BMP280_Read_UT(rt_int32_t *UT);
+BMP280_RESULT BMP280_Read_UTP(rt_int32_t *UT, rt_int32_t *UP);
 
-int32_t  BMP280_CalcT(int32_t UT);
-uint32_t BMP280_CalcP(int32_t UP);
+rt_int32_t  BMP280_CalcT(rt_int32_t UT);
+rt_uint32_t BMP280_CalcP(rt_int32_t UP);
 
-uint32_t BMP280_Pa_to_mmHg(uint32_t p_pa);
+rt_uint32_t BMP280_Pa_to_mmHg(rt_uint32_t p_pa);
 
 #if (BMP280_FLOAT_FUNCTIONS)
 
-float BMP280_CalcTf(int32_t UT);
-float BMP280_CalcPf(uint32_t UP);
+float BMP280_CalcTf(rt_int32_t UT);
+float BMP280_CalcPf(rt_uint32_t UP);
 float BMP280_Pa_to_mmHgf(float p_pa);
 
 #endif // BMP280_FLOAT_FUNCTIONS
