@@ -99,7 +99,7 @@ int init_xeno() {
      */
     rt_mutex_take(raw_mutex, RT_WAITING_FOREVER);
     u0d = acc_v[i];
-    altd = temp_v[i];
+    altd = baro_v[i];
     throtl = gyro_v[i];
     rt_mutex_release(raw_mutex);
 

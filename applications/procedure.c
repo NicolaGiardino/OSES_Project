@@ -16,77 +16,80 @@ static int16_t acc[3], gyro[3], temp;
  */
 void write_raw_mem_async()
 {
-  static uint8_t addr8[3];
-  static rt_uint8_t acc8[4], gyro8[4], temp8[4];
-  rt_tick_t init, end;
-  rt_int32_t total;
+    static uint8_t addr8[3];
+    static rt_uint8_t acc8[4], gyro8[4], temp8[4];
 
-  rt_kprintf("Inside IRQ\n");
+    rt_kprintf("Inside IRQ\n");
 
-  init = rt_tick_get_millisecond();
+#if COUNT
+    rt_tick_t init, end;
+    rt_int32_t total;
+    init = rt_tick_get_millisecond();
+#endif
 
-  if(addr >= 0x7FFFF4)
-  {
+    if(addr >= 0x7FFFF4)
+    {
       w25q64_control(CHIP_ERASE, RT_NULL, RT_NULL, RT_NULL);
       addr = 0x00;
-  }
+    }
 
-  rt_mutex_take(raw_mutex, RT_WAITING_FOREVER);
+    rt_mutex_take(raw_mutex, RT_WAITING_FOREVER);
 
-  acc8[0] = (rt_uint8_t)acc_v[0];
-  acc8[1] = (rt_uint8_t)((rt_uint32_t)acc_v[0] << 8);
-  acc8[2] = (rt_uint8_t)((rt_uint32_t)acc_v[0] << 16);
-  acc8[3] = (rt_uint8_t)((rt_uint32_t)acc_v[0] << 24);
+    acc8[0] = (rt_uint8_t)acc_v[0];
+    acc8[1] = (rt_uint8_t)((rt_uint32_t)acc_v[0] << 8);
+    acc8[2] = (rt_uint8_t)((rt_uint32_t)acc_v[0] << 16);
+    acc8[3] = (rt_uint8_t)((rt_uint32_t)acc_v[0] << 24);
 
-  gyro8[0] = (rt_uint8_t)gyro_v[0];
-  gyro8[1] = (rt_uint8_t)((rt_uint32_t)gyro_v[0] << 8);
-  gyro8[2] = (rt_uint8_t)((rt_uint32_t)gyro_v[0] << 16);
-  gyro8[3] = (rt_uint8_t)((rt_uint32_t)gyro_v[0] << 24);
+    gyro8[0] = (rt_uint8_t)gyro_v[0];
+    gyro8[1] = (rt_uint8_t)((rt_uint32_t)gyro_v[0] << 8);
+    gyro8[2] = (rt_uint8_t)((rt_uint32_t)gyro_v[0] << 16);
+    gyro8[3] = (rt_uint8_t)((rt_uint32_t)gyro_v[0] << 24);
 
-  temp8[0] = (rt_uint8_t)temp_v[0];
-  temp8[1] = (rt_uint8_t)((rt_uint32_t)temp_v[0] << 8);
-  temp8[3] = (rt_uint8_t)((rt_uint32_t)temp_v[0] << 16);
-  temp8[4] = (rt_uint8_t)((rt_uint32_t)temp_v[0] << 24);
+    temp8[0] = (rt_uint8_t)baro_v[0];
+    temp8[1] = (rt_uint8_t)((rt_uint32_t)baro_v[0] << 8);
+    temp8[3] = (rt_uint8_t)((rt_uint32_t)baro_v[0] << 16);
+    temp8[4] = (rt_uint8_t)((rt_uint32_t)baro_v[0] << 24);
 
-  addr8[0] = (rt_uint8_t)addr;
-  addr8[1] = (rt_uint8_t)(addr << 8);
-  addr8[2] = (rt_uint8_t)(addr << 16);
-  w25q64_control(PAGE_PROGRAM, addr8, 4, acc8);
+    addr8[0] = (rt_uint8_t)addr;
+    addr8[1] = (rt_uint8_t)(addr << 8);
+    addr8[2] = (rt_uint8_t)(addr << 16);
+    w25q64_control(PAGE_PROGRAM, addr8, 4, acc8);
 
-#if DEBUG
-  rt_kprintf("Wrote acc data on FLASH\n");
+    #if DEBUG
+    rt_kprintf("Wrote acc data on FLASH\n");
+    #endif
+
+    addr += 0x04;
+    addr8[0] = (rt_uint8_t)addr;
+    addr8[1] = (rt_uint8_t)(addr << 8);
+    addr8[2] = (rt_uint8_t)(addr << 16);
+
+    w25q64_control(PAGE_PROGRAM, addr8, 4, gyro8);
+
+    #if DEBUG
+    rt_kprintf("Wrote gyro data on FLASH\n");
+    #endif
+
+    addr += 0x04;
+    addr8[0] = (rt_uint8_t)addr;
+    addr8[1] = (rt_uint8_t)(addr << 8);
+    addr8[2] = (rt_uint8_t)(addr << 16);
+    w25q64_control(PAGE_PROGRAM, addr8, 4, temp8);
+
+    addr += 0x04;
+
+    #if DEBUG
+    rt_kprintf("Wrote temp data on FLASH\n");
+    #endif
+
+    rt_mutex_release(raw_mutex);
+
+    end = rt_tick_get_millisecond();
+
+#if COUNT
+    total = (int)(end - init);
+    rt_kprintf("Total time IRQ: %d\n", total);
 #endif
-
-  addr += 0x04;
-  addr8[0] = (rt_uint8_t)addr;
-  addr8[1] = (rt_uint8_t)(addr << 8);
-  addr8[2] = (rt_uint8_t)(addr << 16);
-
-  w25q64_control(PAGE_PROGRAM, addr8, 4, gyro8);
-
-#if DEBUG
-  rt_kprintf("Wrote gyro data on FLASH\n");
-#endif
-
-  addr += 0x04;
-  addr8[0] = (rt_uint8_t)addr;
-  addr8[1] = (rt_uint8_t)(addr << 8);
-  addr8[2] = (rt_uint8_t)(addr << 16);
-  w25q64_control(PAGE_PROGRAM, addr8, 4, temp8);
-
-  addr += 0x04;
-
-#if DEBUG
-  rt_kprintf("Wrote temp data on FLASH\n");
-#endif
-
-  rt_mutex_release(raw_mutex);
-
-  end = rt_tick_get_millisecond();
-
-  total = (int)(end - init);
-
-  rt_kprintf("Total time IRQ: %d\n", total);
 
 }
 
@@ -166,12 +169,14 @@ void write_bench_mem_async()
   static uint8_t addr8[3];
   static rt_uint8_t res8[56];
 
-  rt_tick_t init, end;
-  rt_int32_t total;
 
   rt_kprintf("Inside IRQ\n");
 
+#if COUNT
+  rt_tick_t init, end;
+  rt_int32_t total;
   init = rt_tick_get_millisecond();
+#endif
 
   if(addr_bench >= 0xFFFFC8)
   {
@@ -205,11 +210,12 @@ void write_bench_mem_async()
 
   rt_mutex_release(bench_mutex);
 
+#if COUNT
   end = rt_tick_get_millisecond();
-
   total = (int)(end - init);
-
   rt_kprintf("Total time IRQ: %d\n", total);
+#endif
+
 }
 
 /**
@@ -285,50 +291,103 @@ void button_bench_async_handler()
  */
 void producer_entry(void *parameter)
 {
-  mpu6050_init("i2c1");
-  mpu6050_reset();
+
+    rt_uint32_t i;
+
+    // RAW temperature and pressure values
+    rt_int32_t UT, UP;
+
+    // Human-readable temperature and pressure
+    rt_uint32_t pressure;
 
 #if DEBUG
-  rt_kprintf("Init MPU6050 done\n");
+    rt_kprintf("Init MPU6050 done\n");
 #endif
 
-  rt_uint32_t init_time, end_time;
-  rt_int32_t time_taken;
+#if COUNT
+    rt_uint32_t init_time, end_time;
+    rt_int32_t time_taken;
+#endif
+    while (1) {
 
-  //while (1) {
+        rt_kprintf("Start sampling\n");
 
-    rt_kprintf("Start sampling\n");
+#if COUNT
+        init_time = rt_tick_get_millisecond();
+#endif
 
-    init_time = rt_tick_get_millisecond();
+        for (curr_read = 0; curr_read < NUM_READINGS; curr_read++) {
+              rt_mutex_take(raw_mutex, RT_WAITING_FOREVER);
 
-    for (curr_read = 0; curr_read < NUM_READINGS; curr_read++) {
-      rt_mutex_take(raw_mutex, RT_WAITING_FOREVER);
-
-      mpu6050_read_raw(acc, gyro, &temp);
-      acc_v[curr_read] =
-          sqroot((float)(acc[0] * acc[0] + acc[1] * acc[1] + acc[2] * acc[2]));
-      gyro_v[curr_read] = sqroot(
-          (float)(gyro[0] * gyro[0] + gyro[1] * gyro[1] + gyro[2] * gyro[2]));
-      temp_v[curr_read] = ((float)temp / 340.00) + 36.53;
+              mpu6050_read_raw(acc, gyro, &temp);
+              acc_v[curr_read] =
+                  sqroot((float)(acc[0] * acc[0] + acc[1] * acc[1] + acc[2] * acc[2]));
+              gyro_v[curr_read] = sqroot(
+                  (float)(gyro[0] * gyro[0] + gyro[1] * gyro[1] + gyro[2] * gyro[2]));
 
 #if DEBUG
-      rt_kprintf("Acc. X = %d, Y = %d, Z = %d\n", acc[0], acc[1], acc[2]);
-      rt_kprintf("Gyro. X = %d, Y = %d, Z = %d\n", gyro[0], gyro[1], gyro[2]);
-      rt_kprintf("Temp. raw = %d\n", temp);
-      rt_kprintf("Acc. mod = %d\n", (int)acc_v[curr_read]);
-      rt_kprintf("Gyro. mod = %d\n", (int)gyro_v[curr_read]);
-      rt_kprintf("Temp. actual = %d\n", (int)temp_v[curr_read]);
+              rt_kprintf("Acc. X = %d, Y = %d, Z = %d\n", acc[0], acc[1], acc[2]);
+              rt_kprintf("Gyro. X = %d, Y = %d, Z = %d\n", gyro[0], gyro[1], gyro[2]);
+              rt_kprintf("Acc. mod = %d\n", (int)acc_v[curr_read]);
+              rt_kprintf("Gyro. mod = %d\n", (int)gyro_v[curr_read]);
 #endif
-      //rt_thread_mdelay(1);
-      rt_mutex_release(raw_mutex);
+            // Get raw readings from the chip
+            i = BMP280_Read_UTP(&UT, &UP);
+#if DEBUG
+            rt_kprintf("Raw: T=0x%05X P=0x%05X [R=%s]\r\n",
+                    UT,
+                    UP,
+                    i ? "OK" : "ERROR"
+                );
+#endif
+
+            if (UT == 0x80000)
+            {
+#if DEBUG
+                // Either temperature measurement is configured as 'skip' or first conversion is not completed yet
+                rt_kprintf("Temperature: no data\r\n");
+                // There is no sense to calculate pressure without temperature readings
+                rt_kprintf("Pressure: no temperature readings\r\n");
+#endif
+            }
+            else
+            {
+                if (UP == 0x80000)
+                {
+#if DEBUG
+                    // Either pressure measurement is configured as 'skip' or first conversion is not completed yet
+                    rt_kprintf("Pressure: no data\r\n");
+#endif
+                }
+                else
+                {
+                    // Pressure
+                    baro_v[i] = BMP280_CalcPf(UP);
+#if DEBUG
+                    pressure = (uint32_t)(baro_v[i]);
+                    rt_kprintf("Pressure: %.3uPa [%.3uhPa]\r\n",
+                            pressure,
+                            pressure / 100
+                        );
+#endif
+                }
+            }
+#if DEBUG
+            rt_kprintf("------------------------\r\n");
+#endif
+            rt_thread_mdelay(10);
+            rt_mutex_release(raw_mutex);
+        }
+
+#if COUNT
+        end_time = rt_tick_get_millisecond();
+        time_taken = (rt_int32_t)(end_time - init_time);
+
+        rt_kprintf("End sampling, time taken : %d\n", time_taken);
+#endif
+        //rt_thread_mdelay(3000); /* Delay to be chosen */
+
     }
-    end_time = rt_tick_get_millisecond();
-    time_taken = (rt_int32_t)(end_time - init_time);
-
-    rt_kprintf("End sampling, time taken : %d\n", time_taken);
-    //rt_thread_mdelay(3000);
-
-  //}
 }
 
 /**
@@ -341,21 +400,24 @@ void producer_entry(void *parameter)
  */
 void consumer_entry(void *parameter)
 {
-  //while (1)
-  {
+    while (1)
+    {
 
-    rt_tick_t init, end;
-    rt_int32_t time_taken;
-    rt_kprintf("Start benchmark\n");
+        rt_kprintf("Start benchmark\n");
 
-    init = rt_tick_get_millisecond();
-    init_xeno();
-    end = rt_tick_get_millisecond();
-    time_taken = end - init;
+#if COUNT
+        rt_tick_t init, end;
+        rt_int32_t time_taken;
+        init = rt_tick_get_millisecond();
+#endif
+        init_xeno();
+#if COUNT
+        end = rt_tick_get_millisecond();
+        time_taken = end - init;
+        rt_kprintf("End benchmark, time taken : %d\n", time_taken);
+#endif
 
-    rt_kprintf("End benchmark, time taken : %d\n", time_taken);
+        rt_thread_mdelay(3000);
 
-    rt_thread_mdelay(3000);
-
-  }
+    }
 }

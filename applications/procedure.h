@@ -14,6 +14,8 @@
 #include <rtthread.h>
 
 #define DEBUG 1
+#define COUNT 1
+
 
 #define THREAD_PRIORITY RT_THREAD_PRIORITY_MAX - 15
 #define THREAD_TIMESLICE 10
@@ -21,7 +23,7 @@
 
 #define NUM_READINGS 125
 
-float acc_v[NUM_READINGS], gyro_v[NUM_READINGS], temp_v[NUM_READINGS];
+float acc_v[NUM_READINGS], gyro_v[NUM_READINGS], baro_v[NUM_READINGS];
 float results[14];
 
 #if USE_DEFERR
