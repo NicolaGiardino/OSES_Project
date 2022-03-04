@@ -1,0 +1,13 @@
+from building import *
+
+cwd          = GetCurrentDir()
+include_path = [cwd]
+src          = []
+
+src += ['BMP280.c']
+src += ['MPU6050.c']
+src += ['w25q64.c']
+
+group = DefineGroup('periph', src, depend = [''], CPPPATH = include_path)
+
+Return('group')

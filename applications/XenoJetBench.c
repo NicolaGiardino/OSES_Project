@@ -1,5 +1,4 @@
 #include "XenoJetBench.h"
-
 #include <rtdevice.h>
 #include <rtthread.h>
 #include "procedure.h"

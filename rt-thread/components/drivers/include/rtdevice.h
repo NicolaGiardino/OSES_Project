@@ -22,7 +22,6 @@
 #include "ipc/pipe.h"
 #include "ipc/poll.h"
 #include "ipc/ringblk_buf.h"
-#include "ipc/taskserver.h"
 
 #ifdef __cplusplus
 extern "C" {

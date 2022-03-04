@@ -3,9 +3,9 @@
 
 #define USE_DEFERR 1
 
-#include "MPU6050.h"
-#include "w25q64.h"
-#include "BMP280.h"
+#include "../peripherals/MPU6050.h"
+#include "../peripherals/w25q64.h"
+#include "../peripherals/BMP280.h"
 #if USE_DEFERR
 #include "deferrable.h"
 #endif

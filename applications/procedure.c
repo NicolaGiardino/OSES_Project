@@ -1,5 +1,5 @@
 #include "procedure.h"
-#include "../Benchmark/XenoJetBench.h"
+#include "XenoJetBench.h"
 
 static rt_uint32_t addr = 0x00;
 static rt_uint32_t addr_bench = 0x800000;
