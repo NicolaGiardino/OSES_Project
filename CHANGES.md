@@ -30,3 +30,4 @@ Changes:
 | Nicolo' Carpentieri | Mar 03 '22 | Commit 23 | Project fully working, last thing to implement are the proper delays for the threads |
 | Nicolo' Carpentieri | Mar 04 '22 | Commit 24 | Implemented delays, project completed, final tests to be done, improved readability |
 | Fulvio Castello | Mar 05 '22 | Commit 25 | Updated README.md & added repository info |
+| Fulvio Castello | Mar 05 '22 | Commit 26 | Relocated main working files inside a different directory tree - project is ready for final testing |
