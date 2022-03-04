@@ -1,7 +1,7 @@
 #ifndef PROCEDURE_H
 #define PROCEDURE_H
 
-#define USE_DEFERR 0
+#define USE_DEFERR 1
 
 #include "MPU6050.h"
 #include "w25q64.h"
@@ -14,7 +14,7 @@
 #include <rtthread.h>
 
 #define DEBUG 1
-#define COUNT 1
+#define COUNT 0
 
 
 #define THREAD_PRIORITY RT_THREAD_PRIORITY_MAX - 15
@@ -27,12 +27,12 @@ float acc_v[NUM_READINGS], gyro_v[NUM_READINGS], baro_v[NUM_READINGS];
 float results[14];
 
 #if USE_DEFERR
-  rt_aperiodic_task_t raw[2], bench[2];
+rt_aperiodic_task_t raw[2], bench[2];
 #else
-  char mem_bench[2][1024];
-  struct rt_thread write_mem_bench, read_mem_bench;
-  char mem_raw[2][1024];
-  struct rt_thread write_mem_raw, read_mem_raw;
+char mem_bench[2][1024];
+struct rt_thread write_mem_bench, read_mem_bench;
+char mem_raw[2][1024];
+struct rt_thread write_mem_raw, read_mem_raw;
 #endif
 
 rt_mutex_t raw_mutex, bench_mutex;

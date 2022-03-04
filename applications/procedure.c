@@ -2,7 +2,7 @@
 #include "../Benchmark/XenoJetBench.h"
 
 static rt_uint32_t addr = 0x00;
-static rt_uint32_t addr_bench = 0xFFFFC8;
+static rt_uint32_t addr_bench = 0x800000;
 static size_t curr_read = 0;
 static int16_t acc[3], gyro[3], temp;
 
@@ -36,57 +36,56 @@ void write_raw_mem_async()
     rt_mutex_take(raw_mutex, RT_WAITING_FOREVER);
 
     acc8[0] = (rt_uint8_t)acc_v[0];
-    acc8[1] = (rt_uint8_t)((rt_uint32_t)acc_v[0] << 8);
-    acc8[2] = (rt_uint8_t)((rt_uint32_t)acc_v[0] << 16);
-    acc8[3] = (rt_uint8_t)((rt_uint32_t)acc_v[0] << 24);
+    acc8[1] = (rt_uint8_t)((rt_uint32_t)acc_v[0] >> 8);
+    acc8[2] = (rt_uint8_t)((rt_uint32_t)acc_v[0] >> 16);
+    acc8[3] = (rt_uint8_t)((rt_uint32_t)acc_v[0] >> 24);
 
     gyro8[0] = (rt_uint8_t)gyro_v[0];
-    gyro8[1] = (rt_uint8_t)((rt_uint32_t)gyro_v[0] << 8);
-    gyro8[2] = (rt_uint8_t)((rt_uint32_t)gyro_v[0] << 16);
-    gyro8[3] = (rt_uint8_t)((rt_uint32_t)gyro_v[0] << 24);
+    gyro8[1] = (rt_uint8_t)((rt_uint32_t)gyro_v[0] >> 8);
+    gyro8[2] = (rt_uint8_t)((rt_uint32_t)gyro_v[0] >> 16);
+    gyro8[3] = (rt_uint8_t)((rt_uint32_t)gyro_v[0] >> 24);
 
     temp8[0] = (rt_uint8_t)baro_v[0];
-    temp8[1] = (rt_uint8_t)((rt_uint32_t)baro_v[0] << 8);
-    temp8[3] = (rt_uint8_t)((rt_uint32_t)baro_v[0] << 16);
-    temp8[4] = (rt_uint8_t)((rt_uint32_t)baro_v[0] << 24);
+    temp8[1] = (rt_uint8_t)((rt_uint32_t)baro_v[0] >> 8);
+    temp8[3] = (rt_uint8_t)((rt_uint32_t)baro_v[0] >> 16);
+    temp8[4] = (rt_uint8_t)((rt_uint32_t)baro_v[0] >> 24);
 
     addr8[0] = (rt_uint8_t)addr;
-    addr8[1] = (rt_uint8_t)(addr << 8);
-    addr8[2] = (rt_uint8_t)(addr << 16);
+    addr8[1] = (rt_uint8_t)(addr >> 8);
+    addr8[2] = (rt_uint8_t)(addr >> 16);
     w25q64_control(PAGE_PROGRAM, addr8, 4, acc8);
 
-    #if DEBUG
+#if DEBUG
     rt_kprintf("Wrote acc data on FLASH\n");
-    #endif
+#endif
 
     addr += 0x04;
     addr8[0] = (rt_uint8_t)addr;
-    addr8[1] = (rt_uint8_t)(addr << 8);
-    addr8[2] = (rt_uint8_t)(addr << 16);
+    addr8[1] = (rt_uint8_t)(addr >> 8);
+    addr8[2] = (rt_uint8_t)(addr >> 16);
 
     w25q64_control(PAGE_PROGRAM, addr8, 4, gyro8);
 
-    #if DEBUG
+#if DEBUG
     rt_kprintf("Wrote gyro data on FLASH\n");
-    #endif
+#endif
 
     addr += 0x04;
     addr8[0] = (rt_uint8_t)addr;
-    addr8[1] = (rt_uint8_t)(addr << 8);
-    addr8[2] = (rt_uint8_t)(addr << 16);
+    addr8[1] = (rt_uint8_t)(addr >> 8);
+    addr8[2] = (rt_uint8_t)(addr >> 16);
     w25q64_control(PAGE_PROGRAM, addr8, 4, temp8);
 
     addr += 0x04;
 
-    #if DEBUG
+#if DEBUG
     rt_kprintf("Wrote temp data on FLASH\n");
-    #endif
+#endif
 
     rt_mutex_release(raw_mutex);
 
-    end = rt_tick_get_millisecond();
-
 #if COUNT
+    end = rt_tick_get_millisecond();
     total = (int)(end - init);
     rt_kprintf("Total time IRQ: %d\n", total);
 #endif
@@ -103,31 +102,43 @@ void write_raw_mem_async()
  */
 void read_raw_mem_async()
 {
-  rt_mutex_take(raw_mutex, RT_WAITING_FOREVER);
-
-  rt_uint32_t addr32;
-  rt_uint8_t addr8[3] = {0x00, 0x00, 0x00};
-  rt_uint8_t rd[12];
-
-  addr32 = addr - 0xC;
-
-  addr8[0] = (rt_uint8_t)addr32;
-  addr8[1] = (rt_uint8_t)(addr32 << 8);
-  addr8[2] = (rt_uint8_t)(addr32 << 16);
-  w25q64_control(READ_DATA, addr8, 12, rd);
-
-#if DEBUG
-  int i;
-  float read;
-
-  for (i = 0; i < 12; i += 4) {
-    read = (float)(rd[i]) + ((float)((int)(rd[i + 1]) >> 8)) + ((float)((int)(rd[i + 1]) >> 16)) + ((float)((int)(rd[i + 1]) >> 24));
-    rt_kprintf("%d\t", (int)read);
-  }
-  rt_kprintf("\n");
+#if COUNT
+    rt_tick_t init, end;
+    rt_int32_t total;
+    init = rt_tick_get_millisecond();
 #endif
 
-  rt_mutex_release(raw_mutex);
+    rt_mutex_take(raw_mutex, RT_WAITING_FOREVER);
+
+    rt_uint32_t addr32;
+    rt_uint8_t addr8[3] = {0x00, 0x00, 0x00};
+    rt_uint8_t rd[12];
+
+    addr32 = addr - 0xC;
+
+    addr8[0] = (rt_uint8_t)addr32;
+    addr8[1] = (rt_uint8_t)(addr32 >> 8);
+    addr8[2] = (rt_uint8_t)(addr32 >> 16);
+    w25q64_control(READ_DATA, addr8, 12, rd);
+
+#if DEBUG
+    int i;
+    float read;
+
+    for (i = 0; i < 12; i += 4)
+    {
+        read = (float)(rd[i]) + ((float)((int)(rd[i + 1]) << 8)) + ((float)((int)(rd[i + 1]) << 16)) + ((float)((int)(rd[i + 1]) << 24));
+        rt_kprintf("%d\t", (int)read);
+    }
+    rt_kprintf("\n");
+#endif
+
+    rt_mutex_release(raw_mutex);
+#if COUNT
+    end = rt_tick_get_millisecond();
+    total = (int)(end - init);
+    rt_kprintf("Total time IRQ: %d\n", total);
+#endif
 }
 
 /**
@@ -141,19 +152,32 @@ void read_raw_mem_async()
  */
 void button_raw_async_handler()
 {
-  static uint8_t RWn = 0; /* alternate between writing (first) and reading (after) */
+    static uint8_t RWn = 0; /* alternate between writing (first) and reading (after) */
 
 #if DEBUG
-  rt_kprintf("IRQ happened\n");
+    rt_kprintf("IRQ happened\n");
 #endif
 
 #if USE_DEFERR
-  RWn ? rt_thread_deferrable_insert_task(&raw[1]) : rt_thread_deferrable_insert_task(&raw[0]);
+    RWn ? rt_thread_deferrable_insert_task(&raw[1]) : rt_thread_deferrable_insert_task(&raw[0]);
 #else
-  RWn ? rt_thread_startup(&read_mem_raw) : rt_thread_startup(&write_mem_raw); /* perform asynchronous action */
+    if(RWn)
+    {
+        rt_thread_init(&read_mem_raw, "read raw", read_raw_mem_async, RT_NULL,
+                          &mem_raw[1][0], sizeof(mem_raw[1]), THREAD_PRIORITY_DEF,
+                          THREAD_TIMESLICE);
+        rt_thread_startup(&read_mem_raw);
+    }
+    else
+    {
+        rt_thread_init(&write_mem_raw, "write raw", write_raw_mem_async, RT_NULL,
+                    &mem_raw[0][0], sizeof(mem_raw[0]), THREAD_PRIORITY_DEF,
+                    THREAD_TIMESLICE);
+        rt_thread_startup(&write_mem_raw); /* perform asynchronous action */
+    }
 #endif
 
-  RWn ^= 1; /* invert selection */
+    RWn ^= 1; /* invert selection */
 }
 
 /**
@@ -166,54 +190,54 @@ void button_raw_async_handler()
  */
 void write_bench_mem_async()
 {
-  static uint8_t addr8[3];
-  static rt_uint8_t res8[56];
+    static uint8_t addr8[3];
+    static rt_uint8_t res8[56];
 
 
-  rt_kprintf("Inside IRQ\n");
+    rt_kprintf("Inside IRQ\n");
 
 #if COUNT
-  rt_tick_t init, end;
-  rt_int32_t total;
-  init = rt_tick_get_millisecond();
+    rt_tick_t init, end;
+    rt_int32_t total;
+    init = rt_tick_get_millisecond();
 #endif
 
-  if(addr_bench >= 0xFFFFC8)
-  {
+    if(addr_bench >= 0xFFFFC8)
+    {
       w25q64_control(CHIP_ERASE, RT_NULL, RT_NULL, RT_NULL);
       addr_bench = 0x800000;
-  }
+    }
 
-  rt_mutex_take(bench_mutex, RT_WAITING_FOREVER);
+    rt_mutex_take(bench_mutex, RT_WAITING_FOREVER);
 
-  int i, j = 0;
+    int i, j = 0;
 
-  for(i = 0; i < 56; i++)
-  {
+    for(i = 0; i < 56; i++)
+    {
       res8[i] = (rt_uint8_t)results[j];
-      res8[++i] = (rt_uint8_t)((rt_uint32_t)results[j] << 8);
-      res8[++i] = (rt_uint8_t)((rt_uint32_t)results[j] << 16);
-      res8[++i] = (rt_uint8_t)((rt_uint32_t)results[j] << 24);
+      res8[++i] = (rt_uint8_t)((rt_uint32_t)results[j] >> 8);
+      res8[++i] = (rt_uint8_t)((rt_uint32_t)results[j] >> 16);
+      res8[++i] = (rt_uint8_t)((rt_uint32_t)results[j] >> 24);
       j++;
-  }
+    }
 
-  addr8[0] = (rt_uint8_t)addr_bench;
-  addr8[1] = (rt_uint8_t)(addr_bench << 8);
-  addr8[2] = (rt_uint8_t)(addr_bench << 16);
-  w25q64_control(PAGE_PROGRAM, addr8, 56, res8);
+    addr8[0] = (rt_uint8_t)addr_bench;
+    addr8[1] = (rt_uint8_t)(addr_bench >> 8);
+    addr8[2] = (rt_uint8_t)(addr_bench >> 16);
+    w25q64_control(PAGE_PROGRAM, addr8, 56, res8);
 
-  addr_bench += 0x38;
+    addr_bench += 0x38;
 
 #if DEBUG
-  rt_kprintf("Wrote res data on FLASH\n");
+    rt_kprintf("Wrote res data on FLASH\n");
 #endif
 
-  rt_mutex_release(bench_mutex);
+    rt_mutex_release(bench_mutex);
 
 #if COUNT
-  end = rt_tick_get_millisecond();
-  total = (int)(end - init);
-  rt_kprintf("Total time IRQ: %d\n", total);
+    end = rt_tick_get_millisecond();
+    total = (int)(end - init);
+    rt_kprintf("Total time IRQ: %d\n", total);
 #endif
 
 }
@@ -228,31 +252,42 @@ void write_bench_mem_async()
  */
 void read_bench_mem_async()
 {
-  rt_mutex_take(bench_mutex, RT_WAITING_FOREVER);
+#if COUNT
+    rt_tick_t init, end;
+    rt_int32_t total;
+    init = rt_tick_get_millisecond();
+#endif
+    rt_mutex_take(bench_mutex, RT_WAITING_FOREVER);
 
-  rt_uint32_t addr32;
-  rt_uint8_t addr8[3] = {0x00, 0x00, 0x00};
-  rt_uint8_t rd[56];
+    rt_uint32_t addr32;
+    rt_uint8_t addr8[3] = {0x00, 0x00, 0x00};
+    rt_uint8_t rd[56];
 
-  addr32 = addr_bench - 0x38;
+    addr32 = addr_bench - 0x38;
 
-  addr8[0] = (rt_uint8_t)addr32;
-  addr8[1] = (rt_uint8_t)(addr32 << 8);
-  addr8[2] = (rt_uint8_t)(addr32 << 16);
-  w25q64_control(READ_DATA, addr8, 56, rd);
+    addr8[0] = (rt_uint8_t)addr32;
+    addr8[1] = (rt_uint8_t)(addr32 >> 8);
+    addr8[2] = (rt_uint8_t)(addr32 >> 16);
+    w25q64_control(READ_DATA, addr8, 56, rd);
 
 #if DEBUG
-  int i;
-  float read;
+    int i;
+    float read;
 
-  for (i = 0; i < 56; i += 4) {
-    read = (float)(rd[i]) + ((float)((int)(rd[i + 1]) >> 8)) + ((float)((int)(rd[i + 1]) >> 16)) + ((float)((int)(rd[i + 1]) >> 24));
-    rt_kprintf("%d\t", (int)read);
-  }
-  rt_kprintf("\n");
+    for (i = 0; i < 56; i += 4)
+    {
+        read = (float)(rd[i]) + ((float)((int)(rd[i + 1]) << 8)) + ((float)((int)(rd[i + 1]) << 16)) + ((float)((int)(rd[i + 1]) << 24));
+        rt_kprintf("%d\t", (int)read);
+    }
+    rt_kprintf("\n");
 #endif
 
-  rt_mutex_release(bench_mutex);
+    rt_mutex_release(bench_mutex);
+#if COUNT
+    end = rt_tick_get_millisecond();
+    total = (int)(end - init);
+    rt_kprintf("Total time IRQ: %d\n", total);
+#endif
 }
 
 /**
@@ -266,18 +301,32 @@ void read_bench_mem_async()
  */
 void button_bench_async_handler()
 {
-  static uint8_t RWn = 0; /* alternate between writing (first) and reading (after) */
+    static uint8_t RWn = 0; /* alternate between writing (first) and reading (after) */
 #if USE_DEFERR
-  RWn ? rt_thread_deferrable_insert_task(&bench[1]) : rt_thread_deferrable_insert_task(&bench[0]);
+    RWn ? rt_thread_deferrable_insert_task(&bench[1]) : rt_thread_deferrable_insert_task(&bench[0]);
 #else
-  RWn ? rt_thread_startup(&read_mem_bench) : rt_thread_startup(&write_mem_bench); /* perform asynchronous action */
+    if(RWn)
+    {
+        rt_thread_init(&read_mem_bench, "read bench", read_bench_mem_async, RT_NULL,
+                          &mem_bench[1][0], sizeof(mem_bench[1]), THREAD_PRIORITY_DEF,
+                          THREAD_TIMESLICE);
+
+        rt_thread_startup(&read_mem_bench);
+    }
+    else
+    {
+        rt_thread_init(&write_mem_bench, "write bench", write_bench_mem_async, RT_NULL,
+                    &mem_bench[0][0], sizeof(mem_bench[0]), THREAD_PRIORITY_DEF,
+                    THREAD_TIMESLICE);
+        rt_thread_startup(&write_mem_bench); /* perform asynchronous action */
+    }
 #endif
 
 #if DEBUG
-  rt_kprintf("IRQ happened\n");
+    rt_kprintf("IRQ happened\n");
 #endif
 
-  RWn ^= 1; /* invert selection */
+    RWn ^= 1; /* invert selection */
 }
 
 /**
@@ -308,7 +357,8 @@ void producer_entry(void *parameter)
     rt_uint32_t init_time, end_time;
     rt_int32_t time_taken;
 #endif
-    while (1) {
+    while (1)
+    {
 
         rt_kprintf("Start sampling\n");
 
@@ -316,7 +366,8 @@ void producer_entry(void *parameter)
         init_time = rt_tick_get_millisecond();
 #endif
 
-        for (curr_read = 0; curr_read < NUM_READINGS; curr_read++) {
+        for (curr_read = 0; curr_read < NUM_READINGS; curr_read++)
+        {
               rt_mutex_take(raw_mutex, RT_WAITING_FOREVER);
 
               mpu6050_read_raw(acc, gyro, &temp);
@@ -385,8 +436,12 @@ void producer_entry(void *parameter)
 
         rt_kprintf("End sampling, time taken : %d\n", time_taken);
 #endif
-        //rt_thread_mdelay(3000); /* Delay to be chosen */
 
+#if USE_DEFERR
+        rt_thread_mdelay(201000);
+#else
+        rt_thread_mdelay(240000);
+#endif
     }
 }
 
@@ -400,6 +455,7 @@ void producer_entry(void *parameter)
  */
 void consumer_entry(void *parameter)
 {
+    rt_thread_mdelay(5000);
     while (1)
     {
 
@@ -417,7 +473,11 @@ void consumer_entry(void *parameter)
         rt_kprintf("End benchmark, time taken : %d\n", time_taken);
 #endif
 
-        rt_thread_mdelay(3000);
+#if USE_DEFERR
+        rt_thread_mdelay(6000);
+#else
+        rt_thread_mdelay(45000);
+#endif
 
     }
 }
