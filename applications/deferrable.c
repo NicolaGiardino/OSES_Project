@@ -20,6 +20,7 @@ static rt_uint8_t active;
 struct rt_deferrable_t deferrable_server;
 /**
  * This function will start a new period of the deferrable server
+ * It sets back the priority to its initial one, and restarts it if it self-suspended
  *
  * @param NULL parameter passed to the timer function
  *
@@ -38,7 +39,8 @@ void rt_timer_deferrable_period(void *param)
 }
 
 /**
- * This function will stop the deferrable server when its capacity is finished
+ * This function will sort of stop the deferrable server when its capacity is finished
+ * The server will be taken to the lowest priority in the system (just above idle)
  *
  * @param NULL parameter passed to the timer function
  *
@@ -52,7 +54,8 @@ void rt_timer_deferrable_capacity(void *param)
 
 /**
  * This function is the entry of the deferrable server,
- * it runs the aperiodic tasks until they're over or the capacity is over
+ * it runs the aperiodic tasks until they're over
+ * If the tasks are over, the server will self-suspend
  *
  * @param NULL parameter passed to the function
  *
@@ -115,7 +118,7 @@ rt_err_t rt_thread_deferrable_init(rt_uint32_t capacity, rt_uint32_t period, rt_
                         rt_deferrable_stack,
                         sizeof(rt_deferrable_stack),
                         priority,
-                        period);
+                        capacity);
 
     rt_sprintf(deferr_name, "Timer");
 
