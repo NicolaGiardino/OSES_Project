@@ -29,3 +29,4 @@ Changes:
 | Nicolo' Carpentieri | Feb 27 '22 | Commit 22 | Completed implementation of multithreading, first implementation of barometer's library |
 | Nicolo' Carpentieri | Mar 03 '22 | Commit 23 | Project fully working, last thing to implement are the proper delays for the threads |
 | Nicolo' Carpentieri | Mar 04 '22 | Commit 24 | Implemented delays, project completed, final tests to be done, improved readability |
+| Fulvio Castello | Mar 05 '22 | Commit 25 | Updated README.md & added repository info |
