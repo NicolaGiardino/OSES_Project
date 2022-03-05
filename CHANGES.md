@@ -32,3 +32,4 @@ Changes:
 | Fulvio Castello | Mar 05 '22 | Commit 25 | Updated README.md & added repository info |
 | Fulvio Castello | Mar 05 '22 | Commit 26 | Relocated main working files inside a different directory tree - project is ready for final testing |
 | Nicola di Gruttola Giardino | Mar 05 '22 | Commit 27 | Completed tests, project finished |
+| Fulvio Castello | Mar 05 '22 | Commit 28 | Code beautify with clang-format for atom (v2.0.8) |
