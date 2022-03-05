@@ -154,7 +154,7 @@ int main(void)
     }
 
     rt_thread_init(&producer, "producer", producer_entry, RT_NULL,
-                 &producer_stack[0], sizeof(producer_stack), THREAD_PRIORITY - 1,
+                 &producer_stack[0], sizeof(producer_stack), THREAD_PRIORITY - 10,
                  THREAD_TIMESLICE);
 
     rt_thread_init(&consumer, "consumer", consumer_entry, RT_NULL,
