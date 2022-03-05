@@ -1,10 +1,10 @@
 #ifndef MPU6050_H
 #define MPU6050_H
 
-#include <rtthread.h>
-#include <rtdevice.h>
-#include <board.h>
 #include "drv_soft_i2c.h"
+#include <board.h>
+#include <rtdevice.h>
+#include <rtthread.h>
 
 struct rt_i2c_bus_device *i2c_device;
 
