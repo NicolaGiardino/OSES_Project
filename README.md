@@ -1,4 +1,4 @@
-# OSES Project
+# OSES Project[^1]
 
 This application was developed using the [RT-Thread](https://github.com/RT-Thread/rt-thread) OS kernel, to be loaded onto an **STM32 Nucleo-144** board with the aim of realizing an H7 CPU scheduler stress-test based on the [XenoJetBench](https://github.com/ArsalanShahid116/XenoJetBench) benchmark.
 
@@ -9,3 +9,5 @@ These input values are then processed by the synthetic benchmark, whose results 
 The asynchronous requests were initially implemented by means of additional aperiodic tasks, whereas a deferrable server was later added to the system in order to significantly improve the overall workload of such real-time system, whilst providing a considerably higher level of optimization and a safer operation at the same time.
 
 <img width="600" alt="Platform" src="https://user-images.githubusercontent.com/95169925/156853632-3112ba81-083c-43b7-bfc3-573541343d66.PNG">
+
+[^1]: This application was developed by Nicola Di Gruttola Giardino, Fulvio Castello & Nicolò Carpentieri for the *Operating systems for embedded systems* MS course @ the Polytechnic University of Turin. More detailed information for the oral presentation can be found inside the [Documentation](Documentation/) folder.
