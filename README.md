@@ -10,4 +10,4 @@ The asynchronous requests were initially implemented by means of additional aper
 
 <img width="600" alt="Platform" src="https://user-images.githubusercontent.com/95169925/156853632-3112ba81-083c-43b7-bfc3-573541343d66.PNG">
 
-[^1]: This application was developed by **Nicola Di Gruttola Giardino**, **Fulvio Castello** & **Nicolò Carpentieri** for the *Operating systems for embedded systems* MSc course @ the Polytechnic University of Turin. More detailed information for the oral presentation can be found inside the [Documentation](Documentation/) folder.
+[^1]: This application was developed by **Nicola Di Gruttola Giardino**, **Fulvio Castello** & **Nicolò Carpentieri** for the *Operating systems for embedded systems* MSc course @ the Polytechnic University of Turin (A.Y. 2021/2022). More detailed information geared toward an oral presentation can be found inside the [Documentation](Documentation/) folder.
