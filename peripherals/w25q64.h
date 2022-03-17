@@ -28,6 +28,6 @@ struct rt_spi_device *spi_device;
 
 int w25q64_init();
 void w25q64_control(rt_uint8_t instr, rt_uint8_t addr[3], rt_uint8_t dlen,
-                    rt_uint8_t *data);
+					rt_uint8_t *data);
 
 #endif
